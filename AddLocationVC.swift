@@ -11,13 +11,37 @@ import CoreLocation
 import MapKit
 import Parse
 
-class AddLocationVC: UIViewController, CLLocationManagerDelegate, MKMapViewDelegate, UIPopoverPresentationControllerDelegate, UIAdaptivePresentationControllerDelegate {
+class AddLocationVC: UIViewController, CLLocationManagerDelegate, MKMapViewDelegate, UISearchBarDelegate, UIPopoverPresentationControllerDelegate, UIAdaptivePresentationControllerDelegate {
     
     @IBOutlet var mapView: MKMapView!
+    @IBOutlet weak var searchBar: UISearchBar!
+    @IBOutlet weak var doneButton: UIBarButtonItem!
     
+    
+    //Search
+    var searchController:UISearchController!
+    var annotation:MKAnnotation!
+    var localSearchRequest:MKLocalSearchRequest!
+    var localSearch:MKLocalSearch!
+    var localSearchResponse:MKLocalSearchResponse!
+    var error:NSError!
+    var pointAnnotation:MKPointAnnotation!
+    var pinAnnotationView:MKPinAnnotationView!
+
+    //Placemarks
+    var currentPlacemark:CLPlacemark?
+    var selectedLocation:CLLocation!
+    let geoCoder = CLGeocoder()
+    
+    //Location
     let locationManager = CLLocationManager()
-    
     var updateLocation = true
+    
+    //Saving Location
+    var selectedLocationName: String!
+    var selectedLocationAddress: String!
+    var passedSelectedLocationName: String!
+    var passedSelectedLocationAddress: String!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -45,6 +69,13 @@ class AddLocationVC: UIViewController, CLLocationManagerDelegate, MKMapViewDeleg
         
         mapView.showsUserLocation = true
         
+        //Customize the search bar in a hack of a way to make the background tranparent
+        let image = UIImage()
+        
+        searchBar.setBackgroundImage(image, forBarPosition: .Any, barMetrics: .Default)
+        
+        searchBar.scopeBarBackgroundImage = image
+        //TODO: Increase the height if the searchBar http://stackoverflow.com/questions/30858969/can-the-height-of-the-uisearchbar-textfield-be-modified
     }
     
     override func viewDidAppear(animated: Bool) {
@@ -58,6 +89,8 @@ class AddLocationVC: UIViewController, CLLocationManagerDelegate, MKMapViewDeleg
       
     }
     
+    
+    //User location and mapView
     func locationManager(manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         
         var userLocation:CLLocation = locations[0]
@@ -66,9 +99,11 @@ class AddLocationVC: UIViewController, CLLocationManagerDelegate, MKMapViewDeleg
         
         let lat = userLocation.coordinate.latitude
         
+        let center = CLLocationCoordinate2D(latitude: lat, longitude: long)
+        
         let span = MKCoordinateSpanMake(0.1, 0.1)
         
-        let region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: lat, longitude: long), span: span)
+        let region = MKCoordinateRegion(center: center, span: span)
         
         //Flag to update location.  Add button or refresh to find current location but setting updateLocation to true
         
@@ -78,10 +113,178 @@ class AddLocationVC: UIViewController, CLLocationManagerDelegate, MKMapViewDeleg
             
             mapView.setRegion(region, animated: true)
         
-            print(userLocation)
-        
         }
-
     }
     
+    //Search Bar
+    func searchBarSearchButtonClicked(searchBar: UISearchBar){
+
+        //Remove the search bar
+        searchBar.resignFirstResponder()
+        
+        if self.mapView.annotations.count != 0 {
+            
+            annotation = self.mapView.annotations[0]
+            
+            self.mapView.removeAnnotation(annotation)
+        
+        }
+        
+        //Start the local search
+        localSearchRequest = MKLocalSearchRequest()
+        
+        localSearchRequest.naturalLanguageQuery = searchBar.text
+        
+        localSearchRequest.region = mapView.region
+        
+        localSearch = MKLocalSearch(request: localSearchRequest)
+        
+        localSearch.startWithCompletionHandler { (localSearchResponse, error) -> Void in
+            
+            if localSearchResponse == nil {
+        
+                let alertController = UIAlertController(title: nil, message: "Place Not Found", preferredStyle: UIAlertControllerStyle.Alert)
+                
+                alertController.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default, handler: nil))
+                
+                self.presentViewController(alertController, animated: true, completion: nil)
+                
+                return
+        
+            }
+            
+            let mapItems = localSearchResponse!.mapItems
+            
+            var nearbyAnnotations:[MKAnnotation] = []
+            
+            if mapItems.count > 0 {
+            
+                for item in mapItems {
+                
+                    // Add annotation
+                    let annotation = MKPointAnnotation()
+                    
+                    annotation.title = item.name
+                    
+                    annotation.subtitle = item.placemark.locality
+                    
+                    if let location = item.placemark.location {
+                    
+                        annotation.coordinate = location.coordinate
+                    
+                    }
+                    
+                    nearbyAnnotations.append(annotation)
+                
+                }
+            }
+            
+            self.mapView.showAnnotations(nearbyAnnotations, animated: true)
+        
+        }
+    }
+    
+    //Working with placemarks
+    func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
+        
+        let identifier = "MyPin"
+        
+        if annotation is MKUserLocation {
+        
+            return nil
+            
+        }
+        
+        // Reuse the annotation if possible
+        var annotationView: MKPinAnnotationView? = mapView.dequeueReusableAnnotationViewWithIdentifier(identifier) as? MKPinAnnotationView
+
+        if annotationView == nil {
+        
+            annotationView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+            
+            annotationView?.canShowCallout = true
+            
+            annotationView?.pinTintColor = UIColor.redColor()
+            
+        }
+        
+        //annotationView?.rightCalloutAccessoryView = UIButton(type: UIButtonType.DetailDisclosure)
+        
+        return annotationView
+    
+    }
+    
+    //Get info of the selected pin
+    func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
+        
+        let pin = view.annotation!
+        
+        selectedLocation = CLLocation(latitude: pin.coordinate.latitude, longitude: pin.coordinate.longitude)
+        
+        geoCoder.reverseGeocodeLocation(selectedLocation, completionHandler: {(placemarks, error) -> Void in
+            
+            var placemark:CLPlacemark!
+            
+            if error == nil && placemarks?.count > 0 {
+                placemark = (placemarks?[0])! as CLPlacemark
+                
+                var addressString : String = ""
+                if placemark.ISOcountryCode == "TW" /*Address Format in Chinese*/ {
+                    if placemark.country != nil {
+                        addressString = placemark.country!
+                    }
+                    if placemark.subAdministrativeArea != nil {
+                        addressString = addressString + placemark.subAdministrativeArea! + ", "
+                    }
+                    if placemark.postalCode != nil {
+                        addressString = addressString + placemark.postalCode! + " "
+                    }
+                    if placemark.locality != nil {
+                        addressString = addressString + placemark.locality!
+                    }
+                    if placemark.thoroughfare != nil {
+                        addressString = addressString + placemark.thoroughfare!
+                    }
+                    if placemark.subThoroughfare != nil {
+                        addressString = addressString + placemark.subThoroughfare!
+                    }
+                } else {
+                    if placemark.subThoroughfare != nil {
+                        addressString = placemark.subThoroughfare! + " "
+                    }
+                    if placemark.thoroughfare != nil {
+                        addressString = addressString + placemark.thoroughfare! + ", "
+                    }
+                    if placemark.postalCode != nil {
+                        addressString = addressString + placemark.postalCode! + " "
+                    }
+                    if placemark.locality != nil {
+                        addressString = addressString + placemark.locality! + ", "
+                    }
+                    if placemark.administrativeArea != nil {
+                        addressString = addressString + placemark.administrativeArea! + " "
+                    }
+                    if placemark.country != nil {
+                        addressString = addressString + placemark.country!
+                    }
+                }
+                
+                self.selectedLocationName = pin.title!
+                
+                self.selectedLocationAddress = addressString
+                
+            }
+        })
+        
+    }
+    
+    @IBAction func doneButtonPressed(sender: AnyObject) {
+        
+        passedSelectedLocationName = selectedLocationName
+        
+        passedSelectedLocationAddress = selectedLocationAddress
+        
+        performSegueWithIdentifier("unwindToCreateEvent", sender: selectedLocationName)
+        
+    }
 }
