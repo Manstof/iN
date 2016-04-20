@@ -70,6 +70,11 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         
         self.eventCostValue.delegate = self //To Dismiss Keyboard
         
+        //Tags for Text Fields
+        eventNameLabel.tag = 0
+        
+        eventCostValue.tag = 1
+        
         //Register Keyboard for Notifications from Utility.swift
         registerForKeyboardNotifications()
         
@@ -101,7 +106,7 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         super.viewWillDisappear(animated)
         
         //unregister Keyboard for Notifications from Utility.swift
-        unregisterForKeyboardNotifications()
+        deregisterFromKeyboardNotifications()
     
     }
     
@@ -332,39 +337,69 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     
     // -------------------------------------------------------------------------------
     //MARK * Working with the keyboard
-    //Hacking around to make the tableview spacer row appear when the keyboard
-    func keyboardWasShown(notification: NSNotification) {
-        
-        spacerHidden = !spacerHidden
-        
-        if eventNameLabel.isFirstResponder() {
-            
-            let indexPath = NSIndexPath(forRow: 0, inSection: 1)
-            
-            tableView.scrollToRowAtIndexPath(indexPath, atScrollPosition: UITableViewScrollPosition.Top, animated: false)
-        
-        } else if eventCostValue.isFirstResponder() {
-            
-            let indexPath = NSIndexPath(forRow: 1, inSection: 3)
-            
-            tableView.scrollToRowAtIndexPath(indexPath, atScrollPosition: UITableViewScrollPosition.Middle, animated: false)
-            
-        }
-    
-        print("keyboard Shown")
-    
+    func registerForKeyboardNotifications()
+    {
+        //Adding notifies on keyboard appearing
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "keyboardWasShown:", name: UIKeyboardWillShowNotification, object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "keyboardWillBeHidden:", name: UIKeyboardWillHideNotification, object: nil)
     }
     
-    func keyboardWillBeHidden(notification: NSNotification) {
+    
+    func deregisterFromKeyboardNotifications()
+    {
+        //Removing notifies on keyboard appearing
+        NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardWillShowNotification, object: nil)
+        NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardWillHideNotification, object: nil)
+    }
+    
+    func keyboardWasShown(notification: NSNotification)
+    {
+        //Need to calculate keyboard exact size due to Apple suggestions
+        var info : NSDictionary = notification.userInfo!
+        var keyboardSize = (info[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue().size
+        print(tableView.contentInset)
+        var contentInsets : UIEdgeInsets = UIEdgeInsetsMake(0.0, 0.0, keyboardSize!.height, 0.0)
+        print(contentInsets)
+        tableView.contentInset = contentInsets
+        tableView.scrollIndicatorInsets = contentInsets
         
-        spacerHidden = !spacerHidden
+        var aRect : CGRect = self.view.frame
+        aRect.size.height -= keyboardSize!.height
+        if let activeFieldPresent = activeField
+        {
+            if (!CGRectContainsPoint(aRect, activeField!.frame.origin))
+            {
+                self.tableView.scrollRectToVisible(activeField!.frame, animated: true)
+            }
+        }
         
-        print("keyboard Hidden")
         
-        tableView.beginUpdates()
+    }
+    
+    
+    func keyboardWillBeHidden(notification: NSNotification)
+    {
+        //Once keyboard disappears, restore original positions
+        var info : NSDictionary = notification.userInfo!
+        let tabBarHeight = tabBarController!.tabBar.frame.size.height
+        let navigationBarHeight = navigationController!.navigationBar.frame.size.height
+
+        var contentInsets : UIEdgeInsets = UIEdgeInsetsMake(navigationBarHeight, 0.0, tabBarHeight, 0.0)
+
+        tableView.contentInset = contentInsets
+        tableView.scrollIndicatorInsets = contentInsets
+        self.view.endEditing(true)
         
-        tableView.endUpdates()
-        
+    }
+    
+    func textFieldDidBeginEditing(textField: UITextField!)
+    {
+        activeField = textField
+    }
+    
+    func textFieldDidEndEditing(textField: UITextField!)
+    {
+        activeField = nil
     }
     
     //Dismiss the keyboard
@@ -378,19 +413,7 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     
     }
     
-    //Scrolling the keyboard when the UITextFields are selected
-    func textFieldDidBeginEditing(textField: UITextField) {
-        
-        print("textFieldDidBeginEditing")
-
-    }
-    
-    func textFieldDidEndEditing(textField: UITextField) {
-        
-        print("textFieldDidEndEditing")
-        
-    }
-    
+    /*
     override func scrollViewWillBeginDragging(scrollView: UIScrollView) {
         
         eventCostLabel.resignFirstResponder()
@@ -400,6 +423,7 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         print("scrollViewWillBeginDragging")
         
     }
+    */
     
     // -------------------------------------------------------------------------------
     //MARK * Datepicker functions
