@@ -70,6 +70,11 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         
         self.eventCostValue.delegate = self //To Dismiss Keyboard
         
+        //Tags for Text Fields
+        eventNameLabel.tag = 0
+        
+        eventCostValue.tag = 1
+        
         //Register Keyboard for Notifications from Utility.swift
         registerForKeyboardNotifications()
         
@@ -101,7 +106,7 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         super.viewWillDisappear(animated)
         
         //unregister Keyboard for Notifications from Utility.swift
-        unregisterForKeyboardNotifications()
+        deregisterFromKeyboardNotifications()
     
     }
     
@@ -332,63 +337,66 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     
     // -------------------------------------------------------------------------------
     //MARK * Working with the keyboard
-    //Hacking around to make the tableview spacer row appear when the keyboard
-    func keyboardWasShown(notification: NSNotification) {
+    
+    func keyboardWasShown(notification: NSNotification)
+    {
+        //Calculate the keyboard size and adjust the tableView
+        let info : NSDictionary = notification.userInfo!
         
-        spacerHidden = !spacerHidden
+        let keyboardSize = (info[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue().size
         
-        if eventNameLabel.isFirstResponder() {
-            
-            let indexPath = NSIndexPath(forRow: 0, inSection: 1)
-            
-            tableView.scrollToRowAtIndexPath(indexPath, atScrollPosition: UITableViewScrollPosition.Top, animated: false)
+        let contentInsets : UIEdgeInsets = UIEdgeInsetsMake(0.0, 0.0, keyboardSize!.height, 0.0)
         
-        } else if eventCostValue.isFirstResponder() {
-            
-            let indexPath = NSIndexPath(forRow: 1, inSection: 3)
-            
-            tableView.scrollToRowAtIndexPath(indexPath, atScrollPosition: UITableViewScrollPosition.Middle, animated: false)
+        tableView.contentInset = contentInsets
+        
+        //Move the view if the firstResponder is behind the keyboard
+        var viewRect : CGRect = self.view.frame
+        
+        viewRect.size.height -= keyboardSize!.height
+        
+        if (!CGRectContainsPoint(viewRect, activeField!.frame.origin)) {
+                
+            tableView.scrollRectToVisible(activeField!.frame, animated: true)
             
         }
-    
-        print("keyboard Shown")
-    
     }
     
     func keyboardWillBeHidden(notification: NSNotification) {
         
-        spacerHidden = !spacerHidden
+        //Once keyboard disappears, restore original positions
+        let tabBarHeight = tabBarController!.tabBar.frame.size.height
         
-        print("keyboard Hidden")
+        let navigationBarHeight = navigationController!.navigationBar.frame.size.height
+
+        let contentInsets : UIEdgeInsets = UIEdgeInsetsMake(navigationBarHeight, 0.0, tabBarHeight, 0.0)
+
+        tableView.contentInset = contentInsets
         
-        tableView.beginUpdates()
+        //tableView.scrollIndicatorInsets = contentInsets
         
-        tableView.endUpdates()
+        self.view.endEditing(true)
         
+    }
+    
+    func textFieldDidBeginEditing(textField: UITextField) {
+        
+        activeField = textField //Passes to keyboardWasShown to get the scroll correct
+    
+    }
+    
+    func textFieldDidEndEditing(textField: UITextField) {
+        
+        activeField = nil //Passes to keyboardWasShown
+    
     }
     
     //Dismiss the keyboard
     func textFieldShouldReturn(textField: UITextField) -> Bool {
-        
-        print("textFieldShouldReturn")
     
         self.view.endEditing(true)
         
         return false
     
-    }
-    
-    //Scrolling the keyboard when the UITextFields are selected
-    func textFieldDidBeginEditing(textField: UITextField) {
-        
-        print("textFieldDidBeginEditing")
-
-    }
-    
-    func textFieldDidEndEditing(textField: UITextField) {
-        
-        print("textFieldDidEndEditing")
-        
     }
     
     override func scrollViewWillBeginDragging(scrollView: UIScrollView) {

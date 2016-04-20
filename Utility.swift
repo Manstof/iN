@@ -21,7 +21,26 @@ struct globalColor {
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ Keyboard
 //Dismissing the keyboard
 extension UIViewController {
+    //Register the keyboard for notifications in  viewDidLoad
+    func registerForKeyboardNotifications() {
+        
+        //Adding notifies on keyboard appearing
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CreateEventVC.keyboardWasShown(_:)), name: UIKeyboardWillShowNotification, object: nil)
+        
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CreateEventVC.keyboardWillBeHidden(_:)), name: UIKeyboardWillHideNotification, object: nil)
     
+    }
+    
+    //Deregister the keyboard for notification in viewWillDisapper
+    func deregisterFromKeyboardNotifications() {
+        
+        //Removing notifies on keyboard appearing
+        NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardWillShowNotification, object: nil)
+        
+        NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardWillHideNotification, object: nil)
+    }
+    
+    //Dismissing the keyboard for hideKeyboardWhenTappedAround
     func dismissKeyboard() {
         
         view.endEditing(true)
@@ -30,6 +49,7 @@ extension UIViewController {
         
     }
     
+    //Hide the keyboard when the user taps off the keyboard
     func hideKeyboardWhenTappedAround() {
     
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(UIViewController.dismissKeyboard))
@@ -41,8 +61,6 @@ extension UIViewController {
         print("HideKeyboardWhenTappedAround")
     
     }
-
-
 }
 
 extension UITableViewController {
