@@ -337,75 +337,61 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     
     // -------------------------------------------------------------------------------
     //MARK * Working with the keyboard
-    func registerForKeyboardNotifications()
-    {
-        //Adding notifies on keyboard appearing
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "keyboardWasShown:", name: UIKeyboardWillShowNotification, object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "keyboardWillBeHidden:", name: UIKeyboardWillHideNotification, object: nil)
-    }
-    
-    
-    func deregisterFromKeyboardNotifications()
-    {
-        //Removing notifies on keyboard appearing
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardWillShowNotification, object: nil)
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardWillHideNotification, object: nil)
-    }
     
     func keyboardWasShown(notification: NSNotification)
     {
-        //Need to calculate keyboard exact size due to Apple suggestions
-        var info : NSDictionary = notification.userInfo!
-        var keyboardSize = (info[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue().size
-        print(tableView.contentInset)
-        var contentInsets : UIEdgeInsets = UIEdgeInsetsMake(0.0, 0.0, keyboardSize!.height, 0.0)
-        print(contentInsets)
+        //Calculate the keyboard size and adjust the tableView
+        let info : NSDictionary = notification.userInfo!
+        
+        let keyboardSize = (info[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue().size
+        
+        let contentInsets : UIEdgeInsets = UIEdgeInsetsMake(0.0, 0.0, keyboardSize!.height, 0.0)
+        
         tableView.contentInset = contentInsets
-        tableView.scrollIndicatorInsets = contentInsets
         
-        var aRect : CGRect = self.view.frame
-        aRect.size.height -= keyboardSize!.height
-        if let activeFieldPresent = activeField
-        {
-            if (!CGRectContainsPoint(aRect, activeField!.frame.origin))
-            {
-                self.tableView.scrollRectToVisible(activeField!.frame, animated: true)
-            }
+        //Move the view if the firstResponder is behind the keyboard
+        var viewRect : CGRect = self.view.frame
+        
+        viewRect.size.height -= keyboardSize!.height
+        
+        if (!CGRectContainsPoint(viewRect, activeField!.frame.origin)) {
+                
+            tableView.scrollRectToVisible(activeField!.frame, animated: true)
+            
         }
-        
-        
     }
     
-    
-    func keyboardWillBeHidden(notification: NSNotification)
-    {
+    func keyboardWillBeHidden(notification: NSNotification) {
+        
         //Once keyboard disappears, restore original positions
-        var info : NSDictionary = notification.userInfo!
         let tabBarHeight = tabBarController!.tabBar.frame.size.height
+        
         let navigationBarHeight = navigationController!.navigationBar.frame.size.height
 
-        var contentInsets : UIEdgeInsets = UIEdgeInsetsMake(navigationBarHeight, 0.0, tabBarHeight, 0.0)
+        let contentInsets : UIEdgeInsets = UIEdgeInsetsMake(navigationBarHeight, 0.0, tabBarHeight, 0.0)
 
         tableView.contentInset = contentInsets
-        tableView.scrollIndicatorInsets = contentInsets
+        
+        //tableView.scrollIndicatorInsets = contentInsets
+        
         self.view.endEditing(true)
         
     }
     
-    func textFieldDidBeginEditing(textField: UITextField!)
-    {
-        activeField = textField
+    func textFieldDidBeginEditing(textField: UITextField) {
+        
+        activeField = textField //Passes to keyboardWasShown to get the scroll correct
+    
     }
     
-    func textFieldDidEndEditing(textField: UITextField!)
-    {
-        activeField = nil
+    func textFieldDidEndEditing(textField: UITextField) {
+        
+        activeField = nil //Passes to keyboardWasShown
+    
     }
     
     //Dismiss the keyboard
     func textFieldShouldReturn(textField: UITextField) -> Bool {
-        
-        print("textFieldShouldReturn")
     
         self.view.endEditing(true)
         
@@ -413,7 +399,6 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     
     }
     
-    /*
     override func scrollViewWillBeginDragging(scrollView: UIScrollView) {
         
         eventCostLabel.resignFirstResponder()
@@ -423,7 +408,6 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         print("scrollViewWillBeginDragging")
         
     }
-    */
     
     // -------------------------------------------------------------------------------
     //MARK * Datepicker functions
