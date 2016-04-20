@@ -35,15 +35,16 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     @IBOutlet weak var imageConstraintBottom: NSLayoutConstraint!
     
     //Variables
-    var imageSet = false
+    var imageSet:Bool = false
     var lastZoomScale: CGFloat = -1
     var eventName:String = ""
-    var startDatePickerHidden = true
-    var endDatePickerHidden = true
-    var keyboardFrame:CGRect = CGRect(x: 0, y: 0, width: 0, height: 0)
+    var startDatePickerHidden:Bool = true
+    var endDatePickerHidden:Bool = true
     var privateEvent:Bool = false
     var detailText:String = ""
     var detailPlaceholderText:String = ""
+    var spacerHidden:Bool = true
+    var activeField: UITextField?
     
     //Utility
     let screenSize: CGRect = UIScreen.mainScreen().bounds
@@ -69,16 +70,11 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         
         self.eventCostValue.delegate = self //To Dismiss Keyboard
         
-        //Tag Text Fields
-        eventNameLabel.tag = 0
-        
-        eventCostValue.tag = 1
+        //Register Keyboard for Notifications from Utility.swift
+        registerForKeyboardNotifications()
         
         //Hide keyboard from Utility.swift
         self.hideKeyboardWhenTappedAround()
-        
-        //Get the keyboard size
-        //NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CreateEventVC.keyboardShown(_:)), name: UIKeyboardDidShowNotification, object: nil)
         
     }
     
@@ -101,6 +97,14 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         
     }
 
+    override func viewWillDisappear(animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        //unregister Keyboard for Notifications from Utility.swift
+        unregisterForKeyboardNotifications()
+    
+    }
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         
@@ -110,7 +114,7 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     //Mark * Tableview Things
     override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         
-        if indexPath.section == 0 && indexPath.row == 0 {
+        if indexPath.section == 0 && indexPath.row == 0 { //Image
             
             tableView.allowsSelection = false
             
@@ -128,7 +132,7 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
             
                 cell.tintColor = globalColor.inBlue
                 
-                //Control Checkmark TODO: Make this a switch
+                //Control Checkmark TODO: Make this mo' prettier... Maybe a switch?
                 if privateEvent == false {
                 
                     cell.accessoryType = .Checkmark
@@ -147,7 +151,7 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
                     
                 }
             }
-            
+        
         } else if indexPath.section == 3 && indexPath.row == 1 { //Cost
             
             eventCostValue.becomeFirstResponder()
@@ -159,9 +163,8 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         }
         
         //Scroll the selected row to the middle of the screen
-        let indexPath = NSIndexPath(forRow: indexPath.row, inSection: indexPath.section)
-        
-        tableView.scrollToRowAtIndexPath(indexPath, atScrollPosition: UITableViewScrollPosition.Middle, animated: true)
+        //let indexPath = NSIndexPath(forRow: indexPath.row, inSection: indexPath.section)
+        //tableView.scrollToRowAtIndexPath(indexPath, atScrollPosition: UITableViewScrollPosition.Middle, animated: true)
         
         tableView.deselectRowAtIndexPath(indexPath, animated: true)
         
@@ -171,11 +174,11 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     
     override func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
         
-        if startDatePickerHidden && indexPath.section == 2 && indexPath.row == 1 {
+        if startDatePickerHidden && indexPath.section == 2 && indexPath.row == 1 {  //Start Date Picker
             
             return 0
             
-        } else if endDatePickerHidden && indexPath.section == 2 && indexPath.row == 3 {
+        } else if endDatePickerHidden && indexPath.section == 2 && indexPath.row == 3 {  //End Date Picker
             
             return 0
         
@@ -184,6 +187,10 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
             self.view.layoutIfNeeded()
             
             return UITableViewAutomaticDimension
+            
+        } else if spacerHidden == true && indexPath.section == 3 && indexPath.row == 3 {
+            
+            return 0
             
         } else {
         
@@ -325,21 +332,45 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     
     // -------------------------------------------------------------------------------
     //MARK * Working with the keyboard
-    //Get the frame of the keyboard
-    func keyboardShown(notification: NSNotification) {
+    //Hacking around to make the tableview spacer row appear when the keyboard
+    func keyboardWasShown(notification: NSNotification) {
         
-        let info  = notification.userInfo!
+        spacerHidden = !spacerHidden
         
-        let value: AnyObject = info[UIKeyboardFrameEndUserInfoKey]!
+        if eventNameLabel.isFirstResponder() {
+            
+            let indexPath = NSIndexPath(forRow: 0, inSection: 1)
+            
+            tableView.scrollToRowAtIndexPath(indexPath, atScrollPosition: UITableViewScrollPosition.Top, animated: false)
         
-        let rawFrame = value.CGRectValue
-        
-        keyboardFrame = view.convertRect(rawFrame, fromView: nil)
+        } else if eventCostValue.isFirstResponder() {
+            
+            let indexPath = NSIndexPath(forRow: 1, inSection: 3)
+            
+            tableView.scrollToRowAtIndexPath(indexPath, atScrollPosition: UITableViewScrollPosition.Middle, animated: false)
+            
+        }
     
+        print("keyboard Shown")
+    
+    }
+    
+    func keyboardWillBeHidden(notification: NSNotification) {
+        
+        spacerHidden = !spacerHidden
+        
+        print("keyboard Hidden")
+        
+        tableView.beginUpdates()
+        
+        tableView.endUpdates()
+        
     }
     
     //Dismiss the keyboard
     func textFieldShouldReturn(textField: UITextField) -> Bool {
+        
+        print("textFieldShouldReturn")
     
         self.view.endEditing(true)
         
@@ -350,16 +381,26 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     //Scrolling the keyboard when the UITextFields are selected
     func textFieldDidBeginEditing(textField: UITextField) {
         
-        //animateViewMoving(true, moveValue: 100)
-    
+        print("textFieldDidBeginEditing")
+
     }
     
     func textFieldDidEndEditing(textField: UITextField) {
-    
-        //animateViewMoving(true, moveValue: -100)
-    
+        
+        print("textFieldDidEndEditing")
+        
     }
- 
+    
+    override func scrollViewWillBeginDragging(scrollView: UIScrollView) {
+        
+        eventCostLabel.resignFirstResponder()
+        
+        eventNameLabel.resignFirstResponder()
+        
+        print("scrollViewWillBeginDragging")
+        
+    }
+    
     // -------------------------------------------------------------------------------
     //MARK * Datepicker functions
     func toggleDatepicker() {

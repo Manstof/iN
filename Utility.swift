@@ -18,9 +18,17 @@ struct globalColor {
 
 // MARK: ToDo make theme http://sdbr.net/post/Themes-in-Swift/
 
-
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ Keyboard
 //Dismissing the keyboard
 extension UIViewController {
+    
+    func dismissKeyboard() {
+        
+        view.endEditing(true)
+        
+        print("dismissKeyboard")
+        
+    }
     
     func hideKeyboardWhenTappedAround() {
     
@@ -29,23 +37,20 @@ extension UIViewController {
         tap.cancelsTouchesInView = false
         
         view.addGestureRecognizer(tap)
+        
+        print("HideKeyboardWhenTappedAround")
     
     }
 
-    func dismissKeyboard() {
-
-        view.endEditing(true)
-    
-    }
 
 }
 
 extension UITableViewController {
     
     // Lifting the view up
-    func animateViewMoving (up:Bool, moveValue :CGFloat) {
+    func animateViewMoving (up:Bool, moveValue :CGFloat){
         
-        let movementDuration:NSTimeInterval = 0.2
+        let movementDuration:NSTimeInterval = 0.3
         
         let movement:CGFloat = ( up ? -moveValue : moveValue)
         
@@ -53,14 +58,15 @@ extension UITableViewController {
         
         UIView.setAnimationBeginsFromCurrentState(true)
         
-        UIView.setAnimationDuration(movementDuration)
+        UIView.setAnimationDuration(movementDuration )
         
         self.view.frame = CGRectOffset(self.view.frame, 0,  movement)
         
         UIView.commitAnimations()
         
     }
-} //Callout: animateViewMoving(true, moveValue: -100)
+    
+}
 
 //Comparing dates
 extension NSDate {
