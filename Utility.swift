@@ -18,7 +18,6 @@ struct globalColor {
 
 // MARK: ToDo make theme http://sdbr.net/post/Themes-in-Swift/
 
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ Keyboard
 //Dismissing the keyboard
 extension UIViewController {
     //Register the keyboard for notifications in  viewDidLoad

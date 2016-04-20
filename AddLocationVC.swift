@@ -17,7 +17,6 @@ class AddLocationVC: UIViewController, CLLocationManagerDelegate, MKMapViewDeleg
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var doneButton: UIBarButtonItem!
     
-    
     //Search
     var searchController:UISearchController!
     var annotation:MKAnnotation!
@@ -46,7 +45,7 @@ class AddLocationVC: UIViewController, CLLocationManagerDelegate, MKMapViewDeleg
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Ask for Authorisation from the User.
+        // Ask for Authorisation from the User
         self.locationManager.requestAlwaysAuthorization()
         
         // For use in foreground
@@ -75,7 +74,9 @@ class AddLocationVC: UIViewController, CLLocationManagerDelegate, MKMapViewDeleg
         searchBar.setBackgroundImage(image, forBarPosition: .Any, barMetrics: .Default)
         
         searchBar.scopeBarBackgroundImage = image
+        
         //TODO: Increase the height if the searchBar http://stackoverflow.com/questions/30858969/can-the-height-of-the-uisearchbar-textfield-be-modified
+        //TODO: Make the search bar prettier
     }
     
     override func viewDidAppear(animated: Bool) {
@@ -88,7 +89,6 @@ class AddLocationVC: UIViewController, CLLocationManagerDelegate, MKMapViewDeleg
         super.didReceiveMemoryWarning()
       
     }
-    
     
     //User location and mapView
     func locationManager(manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
@@ -105,7 +105,7 @@ class AddLocationVC: UIViewController, CLLocationManagerDelegate, MKMapViewDeleg
         
         let region = MKCoordinateRegion(center: center, span: span)
         
-        //Flag to update location.  Add button or refresh to find current location but setting updateLocation to true
+        //TODO: Add button or refresh to find current location but setting updateLocation to true
         
         if updateLocation == true {
         
@@ -119,7 +119,7 @@ class AddLocationVC: UIViewController, CLLocationManagerDelegate, MKMapViewDeleg
     //Search Bar
     func searchBarSearchButtonClicked(searchBar: UISearchBar){
 
-        //Remove the search bar
+        //Deactivate the search bar
         searchBar.resignFirstResponder()
         
         if self.mapView.annotations.count != 0 {
@@ -131,6 +131,7 @@ class AddLocationVC: UIViewController, CLLocationManagerDelegate, MKMapViewDeleg
         }
         
         //Start the local search
+        //TODO: Select closest annotation to users location
         localSearchRequest = MKLocalSearchRequest()
         
         localSearchRequest.naturalLanguageQuery = searchBar.text
@@ -161,7 +162,7 @@ class AddLocationVC: UIViewController, CLLocationManagerDelegate, MKMapViewDeleg
             
                 for item in mapItems {
                 
-                    // Add annotation
+                    // Add annotation to map
                     let annotation = MKPointAnnotation()
                     
                     annotation.title = item.name
@@ -195,7 +196,7 @@ class AddLocationVC: UIViewController, CLLocationManagerDelegate, MKMapViewDeleg
             
         }
         
-        // Reuse the annotation if possible
+        //Reuse the annotation if possible
         var annotationView: MKPinAnnotationView? = mapView.dequeueReusableAnnotationViewWithIdentifier(identifier) as? MKPinAnnotationView
 
         if annotationView == nil {
@@ -214,7 +215,7 @@ class AddLocationVC: UIViewController, CLLocationManagerDelegate, MKMapViewDeleg
     
     }
     
-    //Get info of the selected pin
+    //Process info of the selected pin
     func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
         
         let pin = view.annotation!
@@ -226,46 +227,85 @@ class AddLocationVC: UIViewController, CLLocationManagerDelegate, MKMapViewDeleg
             var placemark:CLPlacemark!
             
             if error == nil && placemarks?.count > 0 {
+                
                 placemark = (placemarks?[0])! as CLPlacemark
                 
                 var addressString : String = ""
-                if placemark.ISOcountryCode == "TW" /*Address Format in Chinese*/ {
+                
+                if placemark.ISOcountryCode == "TW" {
+                
                     if placemark.country != nil {
+                    
                         addressString = placemark.country!
+                    
                     }
+                    
                     if placemark.subAdministrativeArea != nil {
+                    
                         addressString = addressString + placemark.subAdministrativeArea! + ", "
+                    
                     }
+                    
                     if placemark.postalCode != nil {
+                    
                         addressString = addressString + placemark.postalCode! + " "
+                    
                     }
+                    
                     if placemark.locality != nil {
+                    
                         addressString = addressString + placemark.locality!
+                    
                     }
+                    
                     if placemark.thoroughfare != nil {
+                    
                         addressString = addressString + placemark.thoroughfare!
+                    
                     }
+                    
                     if placemark.subThoroughfare != nil {
+                    
                         addressString = addressString + placemark.subThoroughfare!
+                    
                     }
+                
                 } else {
+                
                     if placemark.subThoroughfare != nil {
+                    
                         addressString = placemark.subThoroughfare! + " "
+                    
                     }
+                    
                     if placemark.thoroughfare != nil {
+                    
                         addressString = addressString + placemark.thoroughfare! + ", "
+                    
                     }
+                    
                     if placemark.postalCode != nil {
+                    
                         addressString = addressString + placemark.postalCode! + " "
+                    
                     }
+                    
                     if placemark.locality != nil {
+                    
                         addressString = addressString + placemark.locality! + ", "
+                
                     }
+                
                     if placemark.administrativeArea != nil {
+                    
                         addressString = addressString + placemark.administrativeArea! + " "
+                    
                     }
+                    
                     if placemark.country != nil {
+                    
                         addressString = addressString + placemark.country!
+                    
                     }
                 }
                 
@@ -275,9 +315,9 @@ class AddLocationVC: UIViewController, CLLocationManagerDelegate, MKMapViewDeleg
                 
             }
         })
-        
     }
     
+    //Unwind segue back to the createEventVC screen
     @IBAction func doneButtonPressed(sender: AnyObject) {
         
         passedSelectedLocationName = selectedLocationName
