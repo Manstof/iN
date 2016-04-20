@@ -85,7 +85,7 @@ class SettingsVC: UITableViewController {
         //Set the screen size and screen width
         let screenWidth = screenSize.width
         
-        let screenHeight = screenSize.height
+        //let screenHeight = screenSize.height
         
         //Setting up the cells
         let cell = tableView.dequeueReusableCellWithIdentifier("cell", forIndexPath: indexPath) as! SettingsCell
@@ -124,7 +124,7 @@ class SettingsVC: UITableViewController {
             
             logoutButton.frame = CGRectMake(0, 0, screenWidth, 60)
             
-            logoutButton.addTarget(self, action: "buttonPressed:", forControlEvents: UIControlEvents.TouchUpInside) //Figure out how to do this
+            logoutButton.addTarget(self, action: Selector("buttonPressed:"), forControlEvents: UIControlEvents.TouchUpInside) //Figure out how to do this
             
             logoutButton.tag = indexPath.row
             

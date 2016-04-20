@@ -93,7 +93,7 @@ class AddLocationVC: UIViewController, CLLocationManagerDelegate, MKMapViewDeleg
     //User location and mapView
     func locationManager(manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         
-        var userLocation:CLLocation = locations[0]
+        let userLocation:CLLocation = locations[0]
         
         let long = userLocation.coordinate.longitude
         
@@ -284,7 +284,7 @@ class AddLocationVC: UIViewController, CLLocationManagerDelegate, MKMapViewDeleg
         
         passedSelectedLocationAddress = selectedLocationAddress
         
-        performSegueWithIdentifier("unwindToCreateEvent", sender: selectedLocationName)
+        performSegueWithIdentifier("unwindAddLocationToCreateEvent", sender: self)
         
     }
 }

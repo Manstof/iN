@@ -40,6 +40,28 @@ extension UIViewController {
 
 }
 
+extension UITableViewController {
+    
+    // Lifting the view up
+    func animateViewMoving (up:Bool, moveValue :CGFloat) {
+        
+        let movementDuration:NSTimeInterval = 0.2
+        
+        let movement:CGFloat = ( up ? -moveValue : moveValue)
+        
+        UIView.beginAnimations( "animateView", context: nil)
+        
+        UIView.setAnimationBeginsFromCurrentState(true)
+        
+        UIView.setAnimationDuration(movementDuration)
+        
+        self.view.frame = CGRectOffset(self.view.frame, 0,  movement)
+        
+        UIView.commitAnimations()
+        
+    }
+} //Callout: animateViewMoving(true, moveValue: -100)
+
 //Comparing dates
 extension NSDate {
     func isGreaterThanDate(dateToCompare: NSDate) -> Bool {

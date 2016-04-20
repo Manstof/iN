@@ -23,9 +23,12 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     @IBOutlet weak var endDatePicker: UIDatePicker!
     @IBOutlet weak var locationLabel: UILabel!
     @IBOutlet weak var locationSubtitle: UILabel!
-    @IBOutlet weak var detailsTextView: UITextView!
+    @IBOutlet weak var privateEventLabel: UILabel!
+    @IBOutlet weak var eventCostLabel: UILabel!
+    @IBOutlet weak var eventCostValue: UITextField!
+    @IBOutlet weak var additionalDetailsLabel: UILabel!
     
-    //Constraints
+    //Constraints: Image
     @IBOutlet weak var imageConstraintTop: NSLayoutConstraint!
     @IBOutlet weak var imageConstraintRight: NSLayoutConstraint!
     @IBOutlet weak var imageConstraintLeft: NSLayoutConstraint!
@@ -37,8 +40,10 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     var eventName:String = ""
     var startDatePickerHidden = true
     var endDatePickerHidden = true
-    var detailTextViewHasChanged = false
     var keyboardFrame:CGRect = CGRect(x: 0, y: 0, width: 0, height: 0)
+    var privateEvent:Bool = false
+    var detailText:String = ""
+    var detailPlaceholderText:String = ""
     
     //Utility
     let screenSize: CGRect = UIScreen.mainScreen().bounds
@@ -49,27 +54,37 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         //Remove Seperators in tableview from empty rows
         tableView.tableFooterView = UIView(frame: CGRectZero)
         
+        //Set up dynamic sizing cells
+        tableView.estimatedRowHeight = 34.0
+        
+        tableView.rowHeight = UITableViewAutomaticDimension
+        
         //Gesture recognizer for the UIImage
         let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(CreateEventVC.tapView(_:)))
         
         imageScrollView.addGestureRecognizer(tapRecognizer)
         
-        //Set delegate for text fields so they dismiss the keyboard
-        self.eventNameLabel.delegate = self
+        //Set delegates
+        self.eventNameLabel.delegate = self //To Dismiss Keyboard
+        
+        self.eventCostValue.delegate = self //To Dismiss Keyboard
+        
+        //Tag Text Fields
+        eventNameLabel.tag = 0
+        
+        eventCostValue.tag = 1
         
         //Hide keyboard from Utility.swift
         self.hideKeyboardWhenTappedAround()
         
         //Get the keyboard size
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CreateEventVC.keyboardShown(_:)), name: UIKeyboardDidShowNotification, object: nil)
+        //NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CreateEventVC.keyboardShown(_:)), name: UIKeyboardDidShowNotification, object: nil)
         
     }
     
-    
     override func viewWillAppear(animated: Bool) {
         
-        //Allow uiimage to be zoomable
-        //setZoomScale()
+        self.tableView.reloadData()
         
     }
     
@@ -86,24 +101,18 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         
     }
 
-    override func viewWillLayoutSubviews() {
-        
-        //Sets zoom right after device orientation change
-        //setZoomScale()
-    
-    }
-
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         
     }
     
+    // -------------------------------------------------------------------------------
     //Mark * Tableview Things
     override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         
         if indexPath.section == 0 && indexPath.row == 0 {
             
-            //tableView.allowsSelection = false
+            tableView.allowsSelection = false
             
         } else if indexPath.section == 1 && indexPath.row == 1 { //Location
             
@@ -113,9 +122,39 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
             
             toggleDatepicker()
         
-        } else if indexPath.section == 3 && indexPath.row == 0 {
+        } else if indexPath.section == 3 && indexPath.row == 0 { //Private Event
+        
+            if let cell = tableView.cellForRowAtIndexPath(NSIndexPath(forRow: indexPath.row, inSection: indexPath.section)) {
             
-            performSegueWithIdentifier("createEventToEventDetails", sender: self)
+                cell.tintColor = globalColor.inBlue
+                
+                //Control Checkmark TODO: Make this a switch
+                if privateEvent == false {
+                
+                    cell.accessoryType = .Checkmark
+                    
+                    privateEventLabel.textColor = UIColor.blackColor()
+                    
+                    privateEvent = true
+                
+                } else if privateEvent == true {
+                    
+                    cell.accessoryType = .None
+                    
+                    privateEventLabel.textColor = UIColor.blackColor()
+                    
+                    privateEvent = false
+                    
+                }
+            }
+            
+        } else if indexPath.section == 3 && indexPath.row == 1 { //Cost
+            
+            eventCostValue.becomeFirstResponder()
+            
+        } else if indexPath.section == 3 && indexPath.row == 2 { //Additional Details
+            
+            performSegueWithIdentifier("createEventToAddDetails", sender: self)
             
         }
         
@@ -140,6 +179,12 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
             
             return 0
         
+        } else if indexPath.section == 3 && indexPath.row == 2 { //Additional Detail
+          
+            self.view.layoutIfNeeded()
+            
+            return UITableViewAutomaticDimension
+            
         } else {
         
             return super.tableView(tableView, heightForRowAtIndexPath: indexPath)
@@ -154,17 +199,18 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         header.textLabel!.textColor = UIColor.whiteColor()
         
         header.contentView.backgroundColor = globalColor.inBlue
-    
+        
+        //TODO: Set the size of the header views that are displayed
+        
     }
     
+    // -------------------------------------------------------------------------------
     //MARK * Working with the imageview
     override func viewWillTransitionToSize(size: CGSize, withTransitionCoordinator coordinator: UIViewControllerTransitionCoordinator) {
         
         super.viewWillTransitionToSize(size, withTransitionCoordinator: coordinator)
         
-        //coordinator.animateAlongsideTransition({ [weak self] _ in self?.updateZoom() },completion: nil)
-        
-        print("viewWillTransitionToSize Run")
+        coordinator.animateAlongsideTransition({ [weak self] _ in self?.updateZoom() },completion: nil)
     
     }
     
@@ -172,27 +218,33 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         if let image = imageView.image {
             
             let imageWidth = image.size.width
+            
             let imageHeight = image.size.height
             
             let viewWidth = imageScrollView.bounds.size.width
+            
             let viewHeight = imageScrollView.bounds.size.height
             
             // center image if it is smaller than the scroll view
             var hPadding = (viewWidth - imageScrollView.zoomScale * imageWidth) / 2
+            
             if hPadding < 0 { hPadding = 0 }
             
             var vPadding = (viewHeight - imageScrollView.zoomScale * imageHeight) / 2
+            
             if vPadding < 0 { vPadding = 0 }
             
             imageConstraintLeft.constant = hPadding
+            
             imageConstraintRight.constant = hPadding
             
             imageConstraintTop.constant = vPadding
+            
             imageConstraintBottom.constant = vPadding
             
             view.layoutIfNeeded()
+        
         }
-        print("updateConstraints Run")
     }
     
     // Zoom to show as much image as possible unless image is smaller than the scroll view
@@ -200,9 +252,6 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         if let image = imageView.image {
             
             var minZoom = min(imageScrollView.bounds.size.width / image.size.width, imageScrollView.bounds.size.height / image.size.height)
-            
-            
-            print("min zoom \(minZoom)")
             
             if minZoom > 1 {
                 
@@ -220,64 +269,26 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
                 lastZoomScale = minZoom
             
             }
-            
-            print("Last Zoom Scale \(lastZoomScale)")
-        
         }
-        
-        print("updateZoom Run")
-    
     }
     
     // UIScrollViewDelegate
-    // -----------------------
-    
     override func scrollViewDidZoom(scrollView: UIScrollView) {
+        
         updateConstraints()
         
-        print("scrollViewDidZoom Run")
     }
     
     override func viewForZoomingInScrollView(scrollView: UIScrollView) -> UIView? {
-        
-        print("viewForZoomingInScrollView")
         
         return imageView
         
     }
     
-    /*func setZoomScale() {
-        
-        let imageViewSize = imageView.bounds.size
-        
-        let scrollViewSize = imageScrollView.bounds.size
-        
-        let widthScale = scrollViewSize.width / imageViewSize.width
-        
-        let heightScale = scrollViewSize.height / imageViewSize.height
-        
-        imageScrollView.minimumZoomScale = min(widthScale, heightScale)
-        
-        imageScrollView.zoomScale = 1.0
-    
-    }
-    
-    override func scrollViewDidZoom(scrollView: UIScrollView) {
-        
-        let imageViewSize = imageView.frame.size
-        
-        let scrollViewSize = imageScrollView.bounds.size
-        
-        let verticalPadding = imageViewSize.height < scrollViewSize.height ? (scrollViewSize.height - imageViewSize.height) / 2 : 0
-        
-        let horizontalPadding = imageViewSize.width < scrollViewSize.width ? (scrollViewSize.width - imageViewSize.width) / 2 : 0
-        
-        imageScrollView.contentInset = UIEdgeInsets(top: verticalPadding, left: horizontalPadding, bottom: verticalPadding, right: horizontalPadding)
-    
-    }*/
-    
     //Touch recognizer. Assigned only to imageView
     func tapView (recognzier: UITapGestureRecognizer) {
+        
+        //TODO: Spin the activity indicator
         
         if UIImagePickerController.isSourceTypeAvailable(.PhotoLibrary) { //Set source type to .camera if you want your user to be able to take a picture
             
@@ -309,11 +320,10 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         imageSet = true
         
         dismissViewControllerAnimated(true, completion: nil)
-        
-        print("imagePickerControllerDismissed")
     
     }
     
+    // -------------------------------------------------------------------------------
     //MARK * Working with the keyboard
     //Get the frame of the keyboard
     func keyboardShown(notification: NSNotification) {
@@ -326,8 +336,6 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         
         keyboardFrame = view.convertRect(rawFrame, fromView: nil)
     
-        
-        
     }
     
     //Dismiss the keyboard
@@ -339,6 +347,20 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     
     }
     
+    //Scrolling the keyboard when the UITextFields are selected
+    func textFieldDidBeginEditing(textField: UITextField) {
+        
+        //animateViewMoving(true, moveValue: 100)
+    
+    }
+    
+    func textFieldDidEndEditing(textField: UITextField) {
+    
+        //animateViewMoving(true, moveValue: -100)
+    
+    }
+ 
+    // -------------------------------------------------------------------------------
     //MARK * Datepicker functions
     func toggleDatepicker() {
         
@@ -398,9 +420,67 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         
     }
     
+    // -------------------------------------------------------------------------------
+    //MARK * Text Fields
+    func textField(textField: UITextField, shouldChangeCharactersInRange range: NSRange, replacementString string: String) -> Bool {
+        
+        switch textField.tag {
+            
+        case 0:
+            
+            //IGNORE shouldChangeCharactorsInRange
+            return true
+            
+        case 1:
+            print("case 1 ran")
+            // Construct the text that will be in the field if this change is accepted
+            let oldText = eventCostValue.text! as NSString
+            
+            var newText = oldText.stringByReplacingCharactersInRange(range, withString: string) as NSString!
+            
+            var newTextString = String(newText)
+            
+            let digits = NSCharacterSet.decimalDigitCharacterSet()
+            
+            var digitText = ""
+            
+            for c in newTextString.unicodeScalars {
+                
+                if digits.longCharacterIsMember(c.value) {
+                    
+                    digitText.append(c)
+                    
+                }
+            }
+            
+            let formatter = NSNumberFormatter()
+            
+            formatter.numberStyle = NSNumberFormatterStyle.CurrencyStyle
+            
+            formatter.locale = NSLocale(localeIdentifier: "en_US")
+            
+            let numberFromField = (NSString(string: digitText).doubleValue)/100
+            
+            newText = formatter.stringFromNumber(numberFromField)
+            
+            eventCostValue.text = newText as String
+            
+            eventCostLabel.textColor = UIColor.blackColor()
+            
+        default:
+        
+            print("CreateEventVC did not detect the tag of the textField")
+        
+        }
+
+        return false
+          
+    }
+    
+    // -------------------------------------------------------------------------------
     //MARK * Navigation
     //Unwind Segue
-    @IBAction func unwindToHomeScreen(segue:UIStoryboardSegue) {
+    @IBAction func unwindToCreateEvent (segue:UIStoryboardSegue) {
         
         if let AddLocationVC = segue.sourceViewController as? AddLocationVC {
             
@@ -425,6 +505,43 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
                     
                 }
             }
+        
+        } else if let AddDetailsVC = segue.sourceViewController as? AddDetailsVC {
+            
+            detailPlaceholderText = AddDetailsVC.placeholderText
+    
+            detailText = AddDetailsVC.textView.text
+            
+            if detailText != detailPlaceholderText {
+                
+                additionalDetailsLabel.text = detailText
+                
+                additionalDetailsLabel.textColor = UIColor.blackColor()
+                
+                additionalDetailsLabel.numberOfLines = 0
+                
+                additionalDetailsLabel.lineBreakMode = NSLineBreakMode.ByWordWrapping
+                
+                //TODO: Get this to work *WHY WONT YOU SCROLL*
+                let scrollIndex = NSIndexPath(forRow: 3, inSection: 3)
+                
+                tableView.scrollToRowAtIndexPath(scrollIndex, atScrollPosition: UITableViewScrollPosition.Bottom, animated: true)
+                
+            }
+        }
+    }
+    
+    //Passing Data to other VC's
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject!) {
+        
+        if segue.identifier == "createEventToAddDetails" {
+        
+            if let destinationVC = segue.destinationViewController as? AddDetailsVC {
+                
+                destinationVC.placeholderText = detailText
+                
+                print(detailText)
+            }
         }
     }
     
@@ -442,3 +559,6 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
 }
 
 //TODO Eventually make a slacktext keyboard for the user to use.
+
+//TODO Add cost information
+
