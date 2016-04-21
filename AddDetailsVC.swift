@@ -12,18 +12,21 @@ import Parse
 class AddDetailsVC: UIViewController, UITextViewDelegate {
     
     @IBOutlet weak var textView: UITextView!
-    
-    //Variables
-    var placeholderText: String = "Placeholder"
-    var passedEventDetails: String!
-    var passedEventPlaceholder: String!
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        textView.text = placeholderText
-
-        textView.textColor = UIColor.lightGrayColor()
+        textView.text = event.info.additionalDetails
+        
+        if event.info.additionalDetails == event.info.additionalDetailsPlaceholder {
+        
+            textView.textColor = UIColor.lightGrayColor()
+        
+        } else {
+            
+            textView.textColor = UIColor.blackColor()
+            
+        }
         
     }
     
@@ -34,6 +37,14 @@ class AddDetailsVC: UIViewController, UITextViewDelegate {
         textView.becomeFirstResponder()
         
         textView.selectedTextRange = textView.textRangeFromPosition(textView.beginningOfDocument, toPosition: textView.beginningOfDocument)
+        
+        //Set cursor position
+        if event.info.additionalDetails != event.info.additionalDetailsPlaceholder {
+        
+            let newPosition = textView.endOfDocument
+        
+            textView.selectedTextRange = textView.textRangeFromPosition(newPosition, toPosition: newPosition)
+        }
         
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(AddDetailsVC.keyboardShown(_:)), name: UIKeyboardDidShowNotification, object: nil)
         
@@ -79,7 +90,7 @@ class AddDetailsVC: UIViewController, UITextViewDelegate {
         //Combine the textView text and the replacement text to create the updated text string
         let currentText:NSString = textView.text
         
-        if currentText == placeholderText {
+        if currentText == event.info.additionalDetailsPlaceholder {
             
             textView.text = nil
             
@@ -92,7 +103,7 @@ class AddDetailsVC: UIViewController, UITextViewDelegate {
         //If updated text view will be empty, add the placeholder and set the cursor to the beginning of the text view
         if updatedText.isEmpty {
             
-            textView.text = placeholderText
+            textView.text = event.info.additionalDetailsPlaceholder
             
             textView.textColor = UIColor.lightGrayColor()
             
@@ -134,9 +145,7 @@ class AddDetailsVC: UIViewController, UITextViewDelegate {
     //Working with Segues
     @IBAction func doneButtonPressed(sender: AnyObject) {
     
-        passedEventDetails = textView.text
-        
-        passedEventPlaceholder = placeholderText
+        event.info.additionalDetails = textView.text
         
         performSegueWithIdentifier("unwindAddDetailToCreateEvent", sender: self)
     

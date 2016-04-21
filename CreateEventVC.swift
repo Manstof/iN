@@ -37,14 +37,12 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     //Variables
     var imageSet:Bool = false
     var lastZoomScale: CGFloat = -1
-    var eventName:String = ""
     var startDatePickerHidden:Bool = true
     var endDatePickerHidden:Bool = true
-    var privateEvent:Bool = false
     var detailText:String = ""
     var detailPlaceholderText:String = ""
     var activeField: UITextField?
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -71,9 +69,6 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         
         eventCostValue.tag = 1
         
-        //Register keyboard for notifications from Utility.swift
-        registerForKeyboardNotifications()
-        
         //Hide keyboard from Utility.swift
         self.hideKeyboardWhenTappedAround()
         
@@ -88,6 +83,9 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     override func viewDidAppear(animated: Bool) {
         
         super.viewDidAppear(animated)
+        
+        //Register keyboard for notifications from Utility.swift
+        registerForKeyboardNotifications()
         
         //Setup the scrollview for the image
         imageScrollView.delegate = self
@@ -136,21 +134,21 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
                 cell.tintColor = globalColor.inBlue
                 
                 //Control Checkmark TODO: Make this mo' prettier... Maybe a switch?
-                if privateEvent == false {
+                if event.info.open == true {
                 
                     cell.accessoryType = .Checkmark
                     
                     privateEventLabel.textColor = UIColor.blackColor()
                     
-                    privateEvent = true
+                    event.info.open = false
                 
-                } else if privateEvent == true {
+                } else if event.info.open == false {
                     
                     cell.accessoryType = .None
                     
                     privateEventLabel.textColor = UIColor.blackColor()
                     
-                    privateEvent = false
+                    event.info.open = true
                     
                 }
             }
@@ -187,7 +185,7 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         
         } else if indexPath.section == 3 && indexPath.row == 2 { //Additional Detail
             
-            if detailText == detailPlaceholderText {
+            if event.info.additionalDetails == event.info.additionalDetailsPlaceholder {
                 
                 return 60
                 
@@ -541,72 +539,56 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     //Unwind
     @IBAction func unwindToCreateEvent (segue:UIStoryboardSegue) {
         
-        //AddLocationVC
-        if let AddLocationVC = segue.sourceViewController as? AddLocationVC {
+        //Working with AddLocationVC data
+        if event.info.locationName != "" && event.info.locationAddress != "" {
             
-            if let locationName = AddLocationVC.passedSelectedLocationName {
-                
-                if locationName.isEmpty == false {
-                    
-                    locationLabel.text = locationName
-                    
-                    locationLabel.textColor = UIColor.blackColor()
-                    
-                }
-            }
+            locationLabel.text = event.info.locationName
             
-            if let address = AddLocationVC.passedSelectedLocationAddress {
-                
-                if address.isEmpty == false {
-                    
-                    locationSubtitle.text = address
-                    
-                    locationSubtitle.textColor = UIColor.darkGrayColor()
-                    
-                }
-            }
+            locationLabel.textColor = UIColor.blackColor()
+            
+            locationSubtitle.text = event.info.locationAddress
+            
+            locationSubtitle.textColor = UIColor.darkGrayColor()
         
-        //AddDetailsVC
-        } else if let AddDetailsVC = segue.sourceViewController as? AddDetailsVC {
+        } else {
             
-            detailPlaceholderText = AddDetailsVC.placeholderText
-    
-            detailText = AddDetailsVC.textView.text
+            print("Did not recieve the location data when unwinding from AddLocationVC")
             
-            if detailText != detailPlaceholderText {
-                
-                additionalDetailsLabel.text = detailText
-                
-                additionalDetailsLabel.textColor = UIColor.blackColor()
-                
-                additionalDetailsLabel.numberOfLines = 0
-                
-                additionalDetailsLabel.lineBreakMode = NSLineBreakMode.ByWordWrapping
-                
-                tableView.scrollRectToVisible(additionalDetailsLabel.frame, animated: true)
-                
-            }
         }
-    }
-    
-    //Passing Data to other VC's
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject!) {
         
-        //TODO: This isn't working and hates itself
-        if segue.identifier == "createEventToAddDetails" {
-        
-            if let destinationVC = segue.destinationViewController as? AddDetailsVC {
+        //Working with AddDetailsVC data
+        if event.info.additionalDetails != event.info.additionalDetailsPlaceholder {
                 
-                destinationVC.placeholderText = detailText
+            additionalDetailsLabel.text = event.info.additionalDetails
                 
-                print(detailText)
-            }
+            additionalDetailsLabel.textColor = UIColor.blackColor()
+                
+            additionalDetailsLabel.numberOfLines = 0
+            
+            additionalDetailsLabel.lineBreakMode = NSLineBreakMode.ByWordWrapping
+            
+            tableView.scrollRectToVisible(additionalDetailsLabel.frame, animated: true)
+            
+        } else {
+            
+            print("Did not recieve the additional details information when unwinding from AddDetailsVC")
+            
         }
     }
     
     //Navigating to invite guests screen
     @IBAction func nextTableButton(sender: AnyObject) {
     
+        event.info.name = eventNameLabel.text
+        
+        print("Event Name: \(event.info.name)")
+        print("Event Location Name: \(event.info.locationName)")
+        print("Event Location Address: \(event.info.locationAddress)")
+        print("Event Start Date: \(event.info.startDate)")
+        print("Event End Date: \(event.info.endDate)")
+        print("Event Open: \(event.info.open)")
+        print("Event Cost: \(event.info.cost)")
+        print("Event Additional Details: \(event.info.name)")
     
     }
     

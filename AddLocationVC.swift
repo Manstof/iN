@@ -39,8 +39,6 @@ class AddLocationVC: UIViewController, CLLocationManagerDelegate, MKMapViewDeleg
     //Saving Location
     var selectedLocationName: String!
     var selectedLocationAddress: String!
-    var passedSelectedLocationName: String!
-    var passedSelectedLocationAddress: String!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -320,9 +318,9 @@ class AddLocationVC: UIViewController, CLLocationManagerDelegate, MKMapViewDeleg
     //Unwind segue back to the createEventVC screen
     @IBAction func doneButtonPressed(sender: AnyObject) {
         
-        passedSelectedLocationName = selectedLocationName
+        event.info.locationName = selectedLocationName
         
-        passedSelectedLocationAddress = selectedLocationAddress
+        event.info.locationAddress = selectedLocationAddress
         
         performSegueWithIdentifier("unwindAddLocationToCreateEvent", sender: self)
         

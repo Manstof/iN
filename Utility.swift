@@ -18,6 +18,31 @@ struct globalColor {
 
 // MARK: ToDo make theme http://sdbr.net/post/Themes-in-Swift/
 
+//Event Details
+class event {
+    
+    var name: String! = ""
+    var locationName: String! = ""
+    var locationAddress: String! = ""
+    var startDate: NSDate!
+    var endDate: NSDate!
+    var open: Bool! = true
+    var cost: String! = ""
+    var additionalDetails: String! = "Enter Additional Event Details"
+    var additionalDetailsPlaceholder: String! = "Enter Additional Event Details"
+    
+    class var info: event {
+
+        struct Static {
+        
+            static let instance = event()
+        
+        }
+        
+        return Static.instance
+    }
+}
+
 //Dismissing the keyboard
 extension UIViewController {
     //Register the keyboard for notifications in  viewDidLoad
