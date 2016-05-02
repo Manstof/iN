@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Contacts
 import Parse
 
 //Setting up colors
@@ -18,7 +19,7 @@ struct globalColor {
 
 // MARK: ToDo make theme http://sdbr.net/post/Themes-in-Swift/
 
-//Event Details
+//Event Details class to store data of events
 class event {
     
     var name: String! = ""
@@ -27,6 +28,7 @@ class event {
     var startDate: NSDate!
     var endDate: NSDate!
     var open: Bool! = true
+    var guests = [CNContact]()
     var cost: String! = ""
     var additionalDetails: String! = "Enter Additional Event Details"
     var additionalDetailsPlaceholder: String! = "Enter Additional Event Details"
@@ -43,7 +45,7 @@ class event {
     }
 }
 
-//Dismissing the keyboard
+//extension working with the keyboard
 extension UIViewController {
     //Register the keyboard for notifications in  viewDidLoad
     func registerForKeyboardNotifications() {
@@ -87,6 +89,62 @@ extension UIViewController {
     }
 }
 
+extension Array where Element: Equatable {
+    
+    mutating func removeObject(object: Element) {
+        
+        if let index = self.indexOf(object) {
+            
+            self.removeAtIndex(index)
+        }
+    }
+    
+    mutating func removeObjectsInArray(array: [Element]) {
+        
+        for object in array {
+            
+            self.removeObject(object)
+            
+        }
+    }
+}
+
+class spinner: NSObject {
+    
+    //Call With
+    //let indicator = spinner().startActivityIndicator(self)
+    //spinner().stopActivityIndicator(self,indicator: indicator)
+    
+    var myActivityIndicator:UIActivityIndicatorView!
+    
+    func startActivityIndicator(obj:UIViewController) -> UIActivityIndicatorView {
+        
+        self.myActivityIndicator = UIActivityIndicatorView(frame:CGRectMake(100, 100, 100, 100)) as UIActivityIndicatorView
+        
+        self.myActivityIndicator.activityIndicatorViewStyle = UIActivityIndicatorViewStyle.WhiteLarge
+        
+        self.myActivityIndicator.backgroundColor = globalColor.inBlue
+        
+        self.myActivityIndicator.center = obj.view.center
+        
+        obj.view.addSubview(myActivityIndicator)
+        
+        self.myActivityIndicator.startAnimating()
+        
+        //UIApplication.sharedApplication().beginIgnoringInteractionEvents()
+        
+        return self.myActivityIndicator
+    }
+    
+    func stopActivityIndicator(obj:UIViewController,indicator:UIActivityIndicatorView)-> Void {
+        
+        //UIApplication.sharedApplication().beginIgnoringInteractionEvents()
+        
+        indicator.removeFromSuperview()
+    }
+}
+
+
 extension UITableViewController {
     
     // Lifting the view up
@@ -110,8 +168,60 @@ extension UITableViewController {
     
 }
 
+
+func phoneFormatter(phoneString: String) -> String {
+    
+    var unformattedNumber = phoneString.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
+    
+    unformattedNumber = unformattedNumber.stringByReplacingOccurrencesOfString("+", withString: "")
+    
+    unformattedNumber = unformattedNumber.stringByReplacingOccurrencesOfString(" ", withString: "")
+    
+    unformattedNumber = unformattedNumber.stringByReplacingOccurrencesOfString("-", withString: "")
+    
+    unformattedNumber = unformattedNumber.stringByReplacingOccurrencesOfString("(", withString: "")
+    
+    unformattedNumber = unformattedNumber.stringByReplacingOccurrencesOfString(")", withString: "")
+    
+    if unformattedNumber[unformattedNumber.startIndex] == "1" {
+        
+        unformattedNumber.removeAtIndex(unformattedNumber.startIndex)
+        
+    }
+    
+    unformattedNumber.characters.count
+    
+    if unformattedNumber.characters.count > 10 {
+        
+        let rangeStart = unformattedNumber.startIndex.advancedBy(10)
+        
+        let rangeEnd = unformattedNumber.endIndex
+        
+        let range = rangeStart..<rangeEnd
+        
+        unformattedNumber.removeRange(range)
+        
+    }
+    
+    unformattedNumber.insert("(", atIndex: unformattedNumber.startIndex)
+    
+    unformattedNumber.insert(")", atIndex: unformattedNumber.startIndex.advancedBy(4))
+    
+    unformattedNumber.insert(" ", atIndex: unformattedNumber.startIndex.advancedBy(5))
+    
+    unformattedNumber.insert("-", atIndex: unformattedNumber.startIndex.advancedBy(9))
+    
+    let formattedNumber = unformattedNumber
+    
+    formattedNumber
+    
+    return formattedNumber
+    
+}
+
 //Comparing dates
 extension NSDate {
+    
     func isGreaterThanDate(dateToCompare: NSDate) -> Bool {
         //Declare Variables
         var isGreater = false

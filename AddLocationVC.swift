@@ -167,6 +167,8 @@ class AddLocationVC: UIViewController, CLLocationManagerDelegate, MKMapViewDeleg
                     
                     annotation.subtitle = item.placemark.locality
                     
+                    //To make these pretty you have to create a custom view
+                    
                     if let location = item.placemark.location {
                     
                         annotation.coordinate = location.coordinate

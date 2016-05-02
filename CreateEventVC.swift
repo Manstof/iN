@@ -1,4 +1,4 @@
-//
+//®
 //  CreateEventVC.swift
 //  iN
 //
@@ -8,8 +8,10 @@
 
 import UIKit
 import Parse
+import Contacts
+import ContactsUI
 
-class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, CLLocationManagerDelegate, UITextFieldDelegate, UITextViewDelegate  {
+class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, CLLocationManagerDelegate, UITextFieldDelegate, UITextViewDelegate, UIPickerViewDelegate, CNContactPickerDelegate {
     
     //UI Elements
     @IBOutlet weak var imageScrollView: UIScrollView!
@@ -23,7 +25,9 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     @IBOutlet weak var endDatePicker: UIDatePicker!
     @IBOutlet weak var locationLabel: UILabel!
     @IBOutlet weak var locationSubtitle: UILabel!
+    @IBOutlet weak var contactsLabel: UILabel!
     @IBOutlet weak var privateEventLabel: UILabel!
+    @IBOutlet weak var privateEventSwitch: UISwitch!
     @IBOutlet weak var eventCostLabel: UILabel!
     @IBOutlet weak var eventCostValue: UITextField!
     @IBOutlet weak var additionalDetailsLabel: UILabel!
@@ -72,6 +76,16 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         //Hide keyboard from Utility.swift
         self.hideKeyboardWhenTappedAround()
         
+        //Adding the done button to the number keyboard
+        self.addDoneButtonOnKeyboard(eventCostValue)
+        
+        //Setup switch
+        privateEventSwitch.addTarget(self, action: #selector(CreateEventVC.switchIsChanged(_:)), forControlEvents: UIControlEvents.ValueChanged)
+        
+        privateEventSwitch.tintColor = globalColor.inBlue
+        
+        privateEventSwitch.onTintColor = globalColor.inBlue
+        
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -117,7 +131,7 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         
         if indexPath.section == 0 && indexPath.row == 0 { //Image
             
-            tableView.allowsSelection = false
+            //Do Nothing
             
         } else if indexPath.section == 1 && indexPath.row == 1 { //Location
             
@@ -127,45 +141,44 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
             
             toggleDatepicker()
         
-        } else if indexPath.section == 3 && indexPath.row == 0 { //Privacy
-        
-            if let cell = tableView.cellForRowAtIndexPath(NSIndexPath(forRow: indexPath.row, inSection: indexPath.section)) {
+        } else if indexPath.section == 3 && indexPath.row == 0 { //Invite Friends
             
-                cell.tintColor = globalColor.inBlue
-                
-                //Control Checkmark TODO: Make this mo' prettier... Maybe a switch?
-                if event.info.open == true {
-                
-                    cell.accessoryType = .Checkmark
-                    
-                    privateEventLabel.textColor = UIColor.blackColor()
-                    
-                    event.info.open = false
-                
-                } else if event.info.open == false {
-                    
-                    cell.accessoryType = .None
-                    
-                    privateEventLabel.textColor = UIColor.blackColor()
-                    
-                    event.info.open = true
-                    
-                }
-            }
+            //findContacts()
+            
+            performSegueWithIdentifier("createEventToInviteGuests", sender: self)
+            
+        } else if indexPath.section == 3 && indexPath.row == 1 { //Privacy
+            
+            switchIsChanged(privateEventSwitch)
         
-        } else if indexPath.section == 3 && indexPath.row == 1 { //Cost
+            /*
+            if privateEventSwitch.on == true {
+              
+                privateEventSwitch.setOn(false, animated: true)
+                
+            } else if privateEventSwitch.on == false {
+                
+                privateEventSwitch.setOn(true, animated: true)
+                
+            }
+            */
+ 
+            //privateEventSwitch.on = !privateEventSwitch.on
+            
+        } else if indexPath.section == 3 && indexPath.row == 2 { //Cost
             
             eventCostValue.becomeFirstResponder()
             
-        } else if indexPath.section == 3 && indexPath.row == 2 { //Additional Details
+        } else if indexPath.section == 3 && indexPath.row == 3 { //Additional Details
             
             performSegueWithIdentifier("createEventToAddDetails", sender: self)
             
         }
         
         //Scroll the selected row to the middle of the screen
-        //let indexPath = NSIndexPath(forRow: indexPath.row, inSection: indexPath.section)
-        //tableView.scrollToRowAtIndexPath(indexPath, atScrollPosition: UITableViewScrollPosition.Middle, animated: true)
+        let indexPath = NSIndexPath(forRow: indexPath.row, inSection: indexPath.section)
+        
+        tableView.scrollToRowAtIndexPath(indexPath, atScrollPosition: UITableViewScrollPosition.Middle, animated: true)
         
         tableView.deselectRowAtIndexPath(indexPath, animated: true)
         
@@ -183,7 +196,7 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
             
             return 0
         
-        } else if indexPath.section == 3 && indexPath.row == 2 { //Additional Detail
+        } else if indexPath.section == 3 && indexPath.row == 3 { //Additional Detail
             
             if event.info.additionalDetails == event.info.additionalDetailsPlaceholder {
                 
@@ -223,10 +236,11 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         super.viewWillTransitionToSize(size, withTransitionCoordinator: coordinator)
         
         coordinator.animateAlongsideTransition({ [weak self] _ in self?.updateZoom() },completion: nil)
-    
+        
     }
     
     func updateConstraints() {
+        
         if let image = imageView.image {
             
             let imageWidth = image.size.width
@@ -261,6 +275,7 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     
     //Zoom to show as much image as possible unless image is smaller than the scroll view
     private func updateZoom() {
+        
         if let image = imageView.image {
             
             var minZoom = min(imageScrollView.bounds.size.width / image.size.width, imageScrollView.bounds.size.height / image.size.height)
@@ -300,8 +315,6 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     //Touch recognizer for imageView
     func tapView (recognzier: UITapGestureRecognizer) {
         
-        //TODO: Spin the activity indicator
-        
         if UIImagePickerController.isSourceTypeAvailable(.PhotoLibrary) { //Set source type to .camera if you want your user to be able to take a picture
             
             let imagePicker = UIImagePickerController()
@@ -316,6 +329,8 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
             
         }
         
+        lastZoomScale = -1
+        
     }
     
     //Process the image selected to the imageview
@@ -323,13 +338,15 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         
         imageView.image = info[UIImagePickerControllerOriginalImage] as? UIImage
         
-        imageView.frame = imageScrollView.frame
+        imageView.bounds = imageScrollView.bounds
         
         imageView.contentMode = UIViewContentMode.ScaleAspectFill
         
-        imageView.clipsToBounds = true
+        imageView.clipsToBounds = false
         
         imageSet = true
+        
+        view.layoutIfNeeded()
         
         dismissViewControllerAnimated(true, completion: nil)
     
@@ -407,6 +424,37 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         
     }
     
+    //Adding a toolbar to the number keyboard
+    //a slightly more generalized solution based on above
+    func addDoneButtonOnKeyboard(view: UIView?) {
+        
+        let doneToolbar: UIToolbar = UIToolbar(frame: CGRectMake(0, 0, tableView.bounds.size.width, 50))
+        
+        doneToolbar.barStyle = UIBarStyle.Default
+        
+        let flexSpace = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.FlexibleSpace, target: nil, action: nil)
+        
+        let done: UIBarButtonItem = UIBarButtonItem(title: "Done", style: UIBarButtonItemStyle.Done, target: view, action: #selector(UIResponder.resignFirstResponder))
+        
+        var items = [UIBarButtonItem]()
+        
+        items.append(flexSpace)
+        
+        items.append(done)
+       
+        doneToolbar.items = items
+        
+        doneToolbar.sizeToFit()
+        
+        if let accessorizedView = view as? UITextField {
+        
+            accessorizedView.inputAccessoryView = doneToolbar
+            
+            accessorizedView.inputAccessoryView = doneToolbar
+        
+        }
+    }
+    
     // █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █
     // -------------------------------------------------------------------------------
     // ╬═══ MARK ═ Datepicker ═══╬
@@ -471,7 +519,56 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     
     // █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █
     // -------------------------------------------------------------------------------
-    // ╬═══ MARK ═ textField ═══╬
+    // ╬═══ MARK ═ Contacts ═══╬
+    /*
+    func findContacts() -> [CNContact] {
+        
+        let keysToFetch = [CNContactFormatter.descriptorForRequiredKeysForStyle(.FullName),
+                           CNContactImageDataKey,
+                           CNContactPhoneNumbersKey]
+        
+        let fetchRequest = CNContactFetchRequest(keysToFetch: keysToFetch)
+        
+        let contactPickerViewController = CNContactPickerViewController()
+        
+        contactPickerViewController.predicateForEnablingContact = NSPredicate(format: "phoneNumbers != nil")
+        
+        contactPickerViewController.delegate = self
+        
+        presentViewController(contactPickerViewController, animated: true, completion: nil)
+        
+        
+    }
+    */
+    
+    // █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █
+    // -------------------------------------------------------------------------------
+    // ╬═══ MARK ═ event privacy switch ═══╬
+    
+    func switchIsChanged(privateEventSwitch: UISwitch) {
+        
+        if privateEventSwitch.on {
+        
+            privateEventLabel.text = "Public Event"
+            
+            privateEventSwitch.setOn(false, animated: true)
+            
+            event.info.open = true
+        
+        } else {
+            
+            privateEventLabel.text = "Private Event"
+        
+            privateEventSwitch.setOn(true, animated: true)
+            
+            event.info.open = false
+            
+        }
+    }
+    
+    // █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █
+    // -------------------------------------------------------------------------------
+    // ╬═══ MARK ═ textFields ═══╬
     
     func textField(textField: UITextField, shouldChangeCharactersInRange range: NSRange, replacementString string: String) -> Bool {
         
@@ -479,16 +576,16 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
             
         case 0:
             
-            //Ignore shouldChangeCharactorsInRange callout
+            //Set the number of charactors accepted in the textField
+            guard let text = textField.text else { return true }
             
-            return true
+            let newLength = text.characters.count + string.characters.count - range.length
+            
+            return newLength <= 30
             
         case 1:
             
-            //TODO: Limit the number of charactors
-            //TODO: Setup a good keyboard for this input field
-            
-            // Construct the text that will be in the field if this change is accepted
+            //Create textField that only accepts numbers and is formatted for $
             let oldText = eventCostValue.text! as NSString
             
             var newText = oldText.stringByReplacingCharactersInRange(range, withString: string) as NSString!
@@ -518,9 +615,13 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
             
             newText = formatter.stringFromNumber(numberFromField)
             
-            eventCostValue.text = newText as String
-            
-            eventCostLabel.textColor = UIColor.blackColor()
+            if newText.length <= 13 {
+                
+                eventCostValue.text = newText as String
+                
+                eventCostLabel.textColor = UIColor.blackColor()
+                
+            }
             
         default:
         
@@ -536,6 +637,8 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     // -------------------------------------------------------------------------------
     // ╬═══ MARK ═ Navigation ═══╬
     
+    //TODO Prepare for segue to stop activity indicator
+    
     //Unwind
     @IBAction func unwindToCreateEvent (segue:UIStoryboardSegue) {
         
@@ -550,9 +653,19 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
             
             locationSubtitle.textColor = UIColor.darkGrayColor()
         
-        } else {
+        }
+        
+        //Working with InviteGuestsVC
+        if event.info.guests.count >= 1 {
             
-            print("Did not recieve the location data when unwinding from AddLocationVC")
+            //TODO something Pretty
+            contactsLabel.text = "\(event.info.guests.count) guests invited"
+            
+            contactsLabel.textColor = UIColor.blackColor()
+            
+            contactsLabel.numberOfLines = 0
+            
+            contactsLabel.lineBreakMode = NSLineBreakMode.ByWordWrapping
             
         }
         
@@ -567,17 +680,13 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
             
             additionalDetailsLabel.lineBreakMode = NSLineBreakMode.ByWordWrapping
             
+            //TODO get scroll to work when presenting the viewcontroller
             tableView.scrollRectToVisible(additionalDetailsLabel.frame, animated: true)
-            
-        } else {
-            
-            print("Did not recieve the additional details information when unwinding from AddDetailsVC")
-            
+        
         }
     }
     
-    //Navigating to invite guests screen
-    @IBAction func nextTableButton(sender: AnyObject) {
+    @IBAction func nextBarButton(sender: AnyObject) {
     
         event.info.name = eventNameLabel.text
         
@@ -586,20 +695,13 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         print("Event Location Address: \(event.info.locationAddress)")
         print("Event Start Date: \(event.info.startDate)")
         print("Event End Date: \(event.info.endDate)")
+        print("Guest Count: \(event.info.guests.count)")
         print("Event Open: \(event.info.open)")
         print("Event Cost: \(event.info.cost)")
         print("Event Additional Details: \(event.info.name)")
-    
-    }
-    
-    @IBAction func nextBarButton(sender: AnyObject) {
-    
-    
+        
     }
     
 }
 
 //TODO Eventually make a slacktext keyboard for the user to use.
-
-//TODO Add cost information
-
