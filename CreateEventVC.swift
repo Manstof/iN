@@ -27,7 +27,7 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     @IBOutlet weak var locationSubtitle: UILabel!
     @IBOutlet weak var contactsLabel: UILabel!
     @IBOutlet weak var privateEventLabel: UILabel!
-    @IBOutlet weak var privateEventSwitch: UISwitch!
+    @IBOutlet weak var openEventSwitch: UISwitch!
     @IBOutlet weak var eventCostLabel: UILabel!
     @IBOutlet weak var eventCostValue: UITextField!
     @IBOutlet weak var additionalDetailsLabel: UILabel!
@@ -39,13 +39,14 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     @IBOutlet weak var imageConstraintBottom: NSLayoutConstraint!
     
     //Variables
-    var imageSet:Bool = false
+    var imageSet: Bool = false
     var lastZoomScale: CGFloat = -1
-    var startDatePickerHidden:Bool = true
-    var endDatePickerHidden:Bool = true
-    var detailText:String = ""
-    var detailPlaceholderText:String = ""
+    var startDatePickerHidden: Bool = true
+    var endDatePickerHidden: Bool = true
+    var detailText: String = ""
+    var detailPlaceholderText: String = ""
     var activeField: UITextField?
+    var unwindSender: String = ""
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -80,11 +81,11 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         self.addDoneButtonOnKeyboard(eventCostValue)
         
         //Setup switch
-        privateEventSwitch.addTarget(self, action: #selector(CreateEventVC.switchIsChanged(_:)), forControlEvents: UIControlEvents.ValueChanged)
+        openEventSwitch.addTarget(self, action: #selector(CreateEventVC.switchIsChanged(_:)), forControlEvents: UIControlEvents.ValueChanged)
         
-        privateEventSwitch.tintColor = globalColor.inBlue
+        openEventSwitch.tintColor = globalColor.inBlue
         
-        privateEventSwitch.onTintColor = globalColor.inBlue
+        openEventSwitch.onTintColor = globalColor.inBlue
         
     }
     
@@ -92,11 +93,42 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         
         self.tableView.reloadData()
         
+        print("View will appear")
+        
     }
     
     override func viewDidAppear(animated: Bool) {
         
         super.viewDidAppear(animated)
+        
+        //Scroll based upon which unwind segue presented the controller
+        if unwindSender == "AddLocationVC" {
+            
+            let indexPath = NSIndexPath(forRow: 1, inSection: 1)
+            
+            tableView.scrollToRowAtIndexPath(indexPath, atScrollPosition: .Middle, animated: true)
+            
+        } else if unwindSender == "InviteGuestsVC" {
+            
+            let indexPath = NSIndexPath(forRow: 0, inSection: 3)
+            
+            tableView.scrollToRowAtIndexPath(indexPath, atScrollPosition: .Middle, animated: true)
+            
+        } else if unwindSender == "AddDetailsVC" {
+            
+            let indexPath = NSIndexPath(forRow: 3, inSection: 3)
+            
+            tableView.scrollToRowAtIndexPath(indexPath, atScrollPosition: .Middle, animated: true)
+            
+        } else {
+            
+            let indexPath = NSIndexPath(forRow: 0, inSection: 0)
+            
+            tableView.scrollToRowAtIndexPath(indexPath, atScrollPosition: .Top, animated: true)
+            
+        }
+        
+        print("view did appear")
         
         //Register keyboard for notifications from Utility.swift
         registerForKeyboardNotifications()
@@ -143,27 +175,11 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         
         } else if indexPath.section == 3 && indexPath.row == 0 { //Invite Friends
             
-            //findContacts()
-            
             performSegueWithIdentifier("createEventToInviteGuests", sender: self)
             
         } else if indexPath.section == 3 && indexPath.row == 1 { //Privacy
             
-            switchIsChanged(privateEventSwitch)
-        
-            /*
-            if privateEventSwitch.on == true {
-              
-                privateEventSwitch.setOn(false, animated: true)
-                
-            } else if privateEventSwitch.on == false {
-                
-                privateEventSwitch.setOn(true, animated: true)
-                
-            }
-            */
- 
-            //privateEventSwitch.on = !privateEventSwitch.on
+            switchIsChanged(openEventSwitch)
             
         } else if indexPath.section == 3 && indexPath.row == 2 { //Cost
             
@@ -188,7 +204,11 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     
     override func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
         
-        if startDatePickerHidden && indexPath.section == 2 && indexPath.row == 1 {  //Start Datepicker
+        if indexPath.section == 0 && indexPath.row == 0 {  //Photo Picker
+            
+            return super.tableView(tableView, heightForRowAtIndexPath: indexPath)
+            
+        } else if startDatePickerHidden && indexPath.section == 2 && indexPath.row == 1 {  //Start Datepicker
             
             return 0
             
@@ -200,7 +220,7 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
             
             if event.info.additionalDetails == event.info.additionalDetailsPlaceholder {
                 
-                return 60
+                return 50
                 
             } else {
             
@@ -208,7 +228,7 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
             
             }
             
-        } else {
+        } else { //All Other Cells
         
             return super.tableView(tableView, heightForRowAtIndexPath: indexPath)
             
@@ -223,8 +243,23 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         
         header.contentView.backgroundColor = globalColor.inBlue
         
-        //TODO: Set the size of the header views that are displayed
+    }
+    
+    override func tableView(tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
         
+        let sectionHeight: CGFloat = 5
+        
+        switch section {
+            
+        case 0:
+            
+            return 0
+            
+        default:
+            
+            return sectionHeight
+        
+        }
     }
     
     // █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █
@@ -417,7 +452,7 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     
     override func scrollViewWillBeginDragging(scrollView: UIScrollView) {
         
-        //Resign responders to get rid of error
+        //Resign responders to get rid of "error"
         eventCostLabel.resignFirstResponder()
         
         eventNameLabel.resignFirstResponder()
@@ -510,10 +545,9 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
             
         }
         
-        //This is where you save the event information
-        //let eventStart = startDatePicker.date
+        event.info.startDate = startDatePicker.date
         
-        //let eventEnd = endDatePicker.date
+        event.info.endDate = endDatePicker.date
         
     }
     
@@ -545,21 +579,21 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     // -------------------------------------------------------------------------------
     // ╬═══ MARK ═ event privacy switch ═══╬
     
-    func switchIsChanged(privateEventSwitch: UISwitch) {
+    func switchIsChanged(openEventSwitch: UISwitch) {
         
-        if privateEventSwitch.on {
+        if openEventSwitch.on {
         
-            privateEventLabel.text = "Public Event"
+            privateEventLabel.text = "Private Event"
             
-            privateEventSwitch.setOn(false, animated: true)
+            openEventSwitch.setOn(false, animated: true)
             
             event.info.open = true
         
         } else {
             
-            privateEventLabel.text = "Private Event"
+            privateEventLabel.text = "Open Event"
         
-            privateEventSwitch.setOn(true, animated: true)
+            openEventSwitch.setOn(true, animated: true)
             
             event.info.open = false
             
@@ -621,6 +655,8 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
                 
                 eventCostLabel.textColor = UIColor.blackColor()
                 
+                event.info.cost = eventCostValue.text
+                
             }
             
         default:
@@ -652,6 +688,8 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
             locationSubtitle.text = event.info.locationAddress
             
             locationSubtitle.textColor = UIColor.darkGrayColor()
+            
+            unwindSender = "AddLocationVC"
         
         }
         
@@ -659,13 +697,15 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         if event.info.guests.count >= 1 {
             
             //TODO something Pretty
-            contactsLabel.text = "\(event.info.guests.count) guests invited"
+            contactsLabel.text = "\(event.info.guests.count) Guests Invited"
             
             contactsLabel.textColor = UIColor.blackColor()
             
             contactsLabel.numberOfLines = 0
             
             contactsLabel.lineBreakMode = NSLineBreakMode.ByWordWrapping
+           
+            unwindSender = "InviteGuestsVC"
             
         }
         
@@ -680,8 +720,8 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
             
             additionalDetailsLabel.lineBreakMode = NSLineBreakMode.ByWordWrapping
             
-            //TODO get scroll to work when presenting the viewcontroller
-            tableView.scrollRectToVisible(additionalDetailsLabel.frame, animated: true)
+            //Set the scroll location in the viewDidAppear
+            unwindSender = "AddDetailsVC"
         
         }
     }
@@ -690,6 +730,33 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     
         event.info.name = eventNameLabel.text
         
+        
+        let createdEvent = PFObject(className: "event")
+        
+        createdEvent["name"] = event.info.name
+        //createdEvent["locationName"] = event.info.locationName
+        //createdEvent["locationAddress"] = event.info.locationAddress
+        //createdEvent["startDate"] = event.info.startDate
+        //createdEvent["endDate"] = event.info.endDate
+        //createdEvent["guests"] = event.info.guests
+        //createdEvent["open"] = event.info.open
+        //createdEvent["cost"] = event.info.cost
+        //createdEvent["details"] = event.info.additionalDetails
+        
+        createdEvent.saveInBackgroundWithBlock { (success: Bool, error: NSError?) -> Void in
+            
+            if (success) {
+            
+                // The object has been saved.
+            
+            } else {
+            
+                // There was a problem, check error.description
+            
+            }
+        }
+        
+        /*
         print("Event Name: \(event.info.name)")
         print("Event Location Name: \(event.info.locationName)")
         print("Event Location Address: \(event.info.locationAddress)")
@@ -698,8 +765,8 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         print("Guest Count: \(event.info.guests.count)")
         print("Event Open: \(event.info.open)")
         print("Event Cost: \(event.info.cost)")
-        print("Event Additional Details: \(event.info.name)")
-        
+        print("Event Additional Details: \(event.info.additionalDetails)")
+        */
     }
     
 }

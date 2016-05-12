@@ -14,10 +14,12 @@ import Parse
 struct globalColor {
     
     static var inBlue = UIColor(red: 107.0/255.0, green: 196.0/255.0, blue: 235.0/255.0, alpha: 1.0)
+    //HEX: 6bc4eb
+    //HSL: hsl(198, 76%, 67%)
 
 }
 
-// MARK: ToDo make theme http://sdbr.net/post/Themes-in-Swift/
+// MARK: TODO make theme http://sdbr.net/post/Themes-in-Swift/
 
 //Event Details class to store data of events
 class event {

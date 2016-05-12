@@ -34,6 +34,7 @@ class InviteGuestsVC: UITableViewController, CNContactPickerDelegate {
         invitedContacts = event.info.guests
         
         //TODO put letter scroll bar on the side
+        //TODO add search bar
         
     }
     
@@ -56,11 +57,13 @@ class InviteGuestsVC: UITableViewController, CNContactPickerDelegate {
     override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
         
         return 1
+        
     }
     
     override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
         return self.contacts.count
+        
     }
     
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
@@ -227,6 +230,8 @@ class InviteGuestsVC: UITableViewController, CNContactPickerDelegate {
     @IBAction func doneButtonPressed(sender: AnyObject) {
         
         event.info.guests = invitedContacts
+        
+        print(event.info.guests.count)
                 
         performSegueWithIdentifier("unwindInviteGuestsToCreateEvent", sender: self)
         

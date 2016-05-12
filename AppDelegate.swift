@@ -38,15 +38,27 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         locationManager = CLLocationManager()
         locationManager?.requestWhenInUseAuthorization()
         
+        //Parse on Heroku
+        let parseConfiguration = ParseClientConfiguration( block: {   (ParseMutableClientConfiguration) -> Void in
+            
+            ParseMutableClientConfiguration.applicationId = "XR8fncEaMFY9pzeZ7Cb7YF6kMkjrRV5rAMnMxJ31"
+            
+            ParseMutableClientConfiguration.clientKey = "9WN6gCM66Az9N3tYjHfsqE0rI3Hs7ctgBCcp9AHl"
+            
+            ParseMutableClientConfiguration.server = "http://in.herokuapp.com/parse"
+        
+        })
+        
+        /*
+        //Old Parse
         // [Optional] Power your app with Local Datastore. For more info, go to
         // https://parse.com/docs/ios/guide#local-datastore
         Parse.enableLocalDatastore()
-        
         // Initialize Parse.
         Parse.setApplicationId("XR8fncEaMFY9pzeZ7Cb7YF6kMkjrRV5rAMnMxJ31", clientKey: "3RQ1eHwSs8tiCh1IqIt0aoWHpNzJJs8Htz4fkiFV")
-        
         // [Optional] Track statistics around application opens.
         PFAnalytics.trackAppOpenedWithLaunchOptions(launchOptions)
+        */
         
         return true
     
