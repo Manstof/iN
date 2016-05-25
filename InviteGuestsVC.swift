@@ -7,7 +7,6 @@
 //
 
 import UIKit
-import Parse
 import Contacts
 import ContactsUI
 
@@ -99,43 +98,14 @@ class InviteGuestsVC: UITableViewController, CNContactPickerDelegate {
         
         //TODO Figure out a way to load the proper contact each time
         //Set image for cells
+        
         if contact.imageData != nil {
             
-            let buttonImage = cell.contactImageButton
-            
-            buttonImage.setImage(UIImage(data: contact.imageData!), forState: .Normal)
-            
-            buttonImage.contentMode = .ScaleAspectFit
-            
-            buttonImage.layer.borderWidth = 1
-            
-            buttonImage.layer.masksToBounds = false
-            
-            buttonImage.layer.borderColor = globalColor.inBlue.CGColor
-            
-            buttonImage.layer.cornerRadius = buttonImage.frame.height/2
-            
-            buttonImage.clipsToBounds = true
+            cell.setNewImage(UIImage(data: contact.imageData!)!)
 
-        } else if contact.givenName.isEmpty == false && contact.familyName.isEmpty == false {
-                
-            let firstInitial = contact.givenName.substringToIndex(contact.givenName.startIndex.advancedBy(1))
-                
-            let lastInitial = contact.familyName.substringToIndex(contact.familyName.startIndex.advancedBy(1))
-                
-            let guestInitials = firstInitial + lastInitial
-                
-            cell.contactImageButton.backgroundColor = UIColor.whiteColor()
-                
-            cell.contactImageButton.setTitle(guestInitials, forState: .Normal)
-                
-            cell.contactImageButton.layer.borderWidth = 1
-                
-            cell.contactImageButton.layer.borderColor = globalColor.inBlue.CGColor
-                
-            cell.contactImageButton.layer.cornerRadius = cell.contactImageButton.frame.height/2
+        } else if contact.givenName.isEmpty == false || contact.familyName.isEmpty == false {
             
-            cell.contactImageButton.clipsToBounds = true
+            cell.setInitials(contact.givenName, secondName: contact.familyName)
             
         }
 
@@ -190,6 +160,8 @@ class InviteGuestsVC: UITableViewController, CNContactPickerDelegate {
     // -------------------------------------------------------------------------------
     // ╬═══ MARK ═ functions ═══╬
 
+    
+    //TODO get rid of businesses
     func findContacts() -> [CNContact] {
         
         let store = CNContactStore()

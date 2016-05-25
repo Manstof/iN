@@ -1,5 +1,4 @@
 //
-//  Utility.swift
 //  iN
 //
 //  Created by Mark Manstof on 3/25/16.
@@ -8,43 +7,21 @@
 
 import Foundation
 import Contacts
+import UIKit
 import Parse
 
-//Setting up colors
-struct globalColor {
+
+//Timestamp function
+var timestamp: String {
     
-    static var inBlue = UIColor(red: 107.0/255.0, green: 196.0/255.0, blue: 235.0/255.0, alpha: 1.0)
-    //HEX: 6bc4eb
-    //HSL: hsl(198, 76%, 67%)
-
-}
-
-// MARK: TODO make theme http://sdbr.net/post/Themes-in-Swift/
-
-//Event Details class to store data of events
-class event {
+    let timestamp = NSDate().timeIntervalSince1970
+ 
+    var timeString = "\(timestamp)"
     
-    var name: String! = ""
-    var locationName: String! = ""
-    var locationAddress: String! = ""
-    var startDate: NSDate!
-    var endDate: NSDate!
-    var open: Bool! = true
-    var guests = [CNContact]()
-    var cost: String! = ""
-    var additionalDetails: String! = "Enter Additional Event Details"
-    var additionalDetailsPlaceholder: String! = "Enter Additional Event Details"
+    timeString = timeString.stringByReplacingOccurrencesOfString(".", withString: "")
     
-    class var info: event {
+    return timeString
 
-        struct Static {
-        
-            static let instance = event()
-        
-        }
-        
-        return Static.instance
-    }
 }
 
 //extension working with the keyboard
@@ -73,8 +50,6 @@ extension UIViewController {
         
         view.endEditing(true)
         
-        print("dismissKeyboard")
-        
     }
     
     //Hide the keyboard when the user taps off the keyboard
@@ -85,8 +60,6 @@ extension UIViewController {
         tap.cancelsTouchesInView = false
         
         view.addGestureRecognizer(tap)
-        
-        print("HideKeyboardWhenTappedAround")
     
     }
 }
@@ -175,7 +148,12 @@ func phoneFormatter(phoneString: String) -> String {
     
     var unformattedNumber = phoneString.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
     
+    //1
+    print(unformattedNumber)
+    
     unformattedNumber = unformattedNumber.stringByReplacingOccurrencesOfString("+", withString: "")
+    
+    unformattedNumber = unformattedNumber.stringByReplacingOccurrencesOfString(" ", withString: "") //weird bug check Ali's number if code line removed
     
     unformattedNumber = unformattedNumber.stringByReplacingOccurrencesOfString(" ", withString: "")
     
@@ -185,11 +163,19 @@ func phoneFormatter(phoneString: String) -> String {
     
     unformattedNumber = unformattedNumber.stringByReplacingOccurrencesOfString(")", withString: "")
     
+    unformattedNumber = unformattedNumber.stringByReplacingOccurrencesOfString(".", withString: "")
+    
+    //2
+    print(unformattedNumber)
+    
     if unformattedNumber[unformattedNumber.startIndex] == "1" {
         
         unformattedNumber.removeAtIndex(unformattedNumber.startIndex)
         
     }
+    
+    //3
+    print(unformattedNumber)
     
     unformattedNumber.characters.count
     
@@ -205,6 +191,9 @@ func phoneFormatter(phoneString: String) -> String {
         
     }
     
+    //4
+    print(unformattedNumber)
+    
     unformattedNumber.insert("(", atIndex: unformattedNumber.startIndex)
     
     unformattedNumber.insert(")", atIndex: unformattedNumber.startIndex.advancedBy(4))
@@ -213,9 +202,10 @@ func phoneFormatter(phoneString: String) -> String {
     
     unformattedNumber.insert("-", atIndex: unformattedNumber.startIndex.advancedBy(9))
     
-    let formattedNumber = unformattedNumber
+    //5
+    print(unformattedNumber)
     
-    formattedNumber
+    let formattedNumber = unformattedNumber
     
     return formattedNumber
     

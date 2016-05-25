@@ -7,11 +7,10 @@
 //
 
 import UIKit
-import Parse
 import Contacts
 import ContactsUI
 
-class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, CLLocationManagerDelegate, UITextFieldDelegate, UITextViewDelegate, UIPickerViewDelegate, CNContactPickerDelegate {
+class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextFieldDelegate, UITextViewDelegate, UIPickerViewDelegate, CNContactPickerDelegate {
     
     //UI Elements
     @IBOutlet weak var imageScrollView: UIScrollView!
@@ -23,7 +22,7 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     @IBOutlet weak var endDateLabel: UILabel!
     @IBOutlet weak var endDateDetailLabel: UILabel!
     @IBOutlet weak var endDatePicker: UIDatePicker!
-    @IBOutlet weak var locationLabel: UILabel!
+    @IBOutlet weak var locationLabel: UITextField!
     @IBOutlet weak var locationSubtitle: UILabel!
     @IBOutlet weak var contactsLabel: UILabel!
     @IBOutlet weak var privateEventLabel: UILabel!
@@ -32,6 +31,9 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     @IBOutlet weak var eventCostValue: UITextField!
     @IBOutlet weak var additionalDetailsLabel: UILabel!
     
+    //Firebase
+    var firebaseRef = Firebase(url: "https://in-events.firebaseio.com/")
+
     //Constraints: Image
     @IBOutlet weak var imageConstraintTop: NSLayoutConstraint!
     @IBOutlet weak var imageConstraintRight: NSLayoutConstraint!
@@ -93,8 +95,6 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         
         self.tableView.reloadData()
         
-        print("View will appear")
-        
     }
     
     override func viewDidAppear(animated: Bool) {
@@ -127,8 +127,6 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
             tableView.scrollToRowAtIndexPath(indexPath, atScrollPosition: .Top, animated: true)
             
         }
-        
-        print("view did appear")
         
         //Register keyboard for notifications from Utility.swift
         registerForKeyboardNotifications()
@@ -545,9 +543,9 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
             
         }
         
-        event.info.startDate = startDatePicker.date
+        event.info.startDateString = NSDateFormatter.localizedStringFromDate(startDatePicker.date, dateStyle:NSDateFormatterStyle.ShortStyle, timeStyle: NSDateFormatterStyle.ShortStyle)
         
-        event.info.endDate = endDatePicker.date
+        event.info.endDateString = NSDateFormatter.localizedStringFromDate(endDatePicker.date, dateStyle:NSDateFormatterStyle.ShortStyle, timeStyle: NSDateFormatterStyle.ShortStyle)
         
     }
     
@@ -727,33 +725,77 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     }
     
     @IBAction func nextBarButton(sender: AnyObject) {
-    
+        
+        //event.info.host = Current User
         event.info.name = eventNameLabel.text
         
+        let firebaseEventID = "\(event.info.host)-\(timestamp)"
         
-        let createdEvent = PFObject(className: "event")
+        //Save the data for the event
+        let createdEvents = ["eventName": event.info.name,
+                             "eventLocationName": event.info.locationName,
+                             "eventLocationAddress": event.info.locationAddress,
+                             "eventStartDate": event.info.startDateString,
+                             "eventEndDate": event.info.endDateString,
+                             "eventGuests": event.info.guests.count,
+                             "eventOpen": event.info.open,
+                             "eventCost": event.info.cost,
+                             "eventAdditionalDetails": event.info.additionalDetails]
         
-        createdEvent["name"] = event.info.name
-        //createdEvent["locationName"] = event.info.locationName
-        //createdEvent["locationAddress"] = event.info.locationAddress
-        //createdEvent["startDate"] = event.info.startDate
-        //createdEvent["endDate"] = event.info.endDate
-        //createdEvent["guests"] = event.info.guests
-        //createdEvent["open"] = event.info.open
-        //createdEvent["cost"] = event.info.cost
-        //createdEvent["details"] = event.info.additionalDetails
+        let firebaseEventRef = Firebase(url: "https://in-events.firebaseio.com/events/")
         
-        createdEvent.saveInBackgroundWithBlock { (success: Bool, error: NSError?) -> Void in
+        let createdEventsRef = firebaseEventRef.childByAppendingPath(firebaseEventID)
+        
+        createdEventsRef.setValue(createdEvents)
+        
+        //Working with guests
+        for guest in event.info.guests {
             
-            if (success) {
+            //Format phone number
+            var formattedPhoneNumber = ""
             
-                // The object has been saved.
-            
-            } else {
-            
-                // There was a problem, check error.description
-            
+            for number in guest.phoneNumbers {
+                
+                if number.label == "_$!<Mobile>!$_" {
+                    
+                    let phoneNumber = number.value as! CNPhoneNumber
+                    
+                    formattedPhoneNumber = phoneFormatter(phoneNumber.stringValue)
+                    
+                }
             }
+            
+            //Format user picture
+            var imageBase64String = ""
+            
+            if guest.imageData != nil {
+                
+                let imageData = guest.imageData
+                
+                imageBase64String = imageData!.base64EncodedStringWithOptions(NSDataBase64EncodingOptions.Encoding64CharacterLineLength)
+                
+            }
+            
+            //Save Guest Information
+            let eventGuest = ["name": guest.givenName + " " + guest.familyName,
+                              "phoneNumber": formattedPhoneNumber,
+                              "imageBase64String": imageBase64String]
+            
+            let firebaseEventGuestRef = Firebase(url: "https://in-events.firebaseio.com/events/\(firebaseEventID)/eventGuests/")
+            
+            let eventGuestRef = firebaseEventGuestRef.childByAppendingPath(guest.givenName + " " + guest.familyName)  //TODO: Make this the users handle
+            
+            eventGuestRef.setValue(eventGuest)
+            
+            //Save Event to users list of events
+            let usersEvents = ["eventID": firebaseEventID]
+            
+            let firebaseUsersEventsRef = Firebase(url: "https://in-events.firebaseio.com/usersEvents/")
+            
+            let usersEventRef = firebaseUsersEventsRef.childByAppendingPath(guest.givenName + " " + guest.familyName) //TODO: Make this the users handle
+            
+            usersEventRef.setValue(usersEvents)
+            
         }
         
         /*

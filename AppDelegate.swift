@@ -39,15 +39,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         locationManager?.requestWhenInUseAuthorization()
         
         //Parse on Heroku
-        let parseConfiguration = ParseClientConfiguration( block: {   (ParseMutableClientConfiguration) -> Void in
-            
-            ParseMutableClientConfiguration.applicationId = "XR8fncEaMFY9pzeZ7Cb7YF6kMkjrRV5rAMnMxJ31"
-            
-            ParseMutableClientConfiguration.clientKey = "9WN6gCM66Az9N3tYjHfsqE0rI3Hs7ctgBCcp9AHl"
-            
-            ParseMutableClientConfiguration.server = "http://in.herokuapp.com/parse"
+        let config = ParseClientConfiguration(block: {
         
-        })
+            (ParseMutableClientConfiguration) -> Void in
+            
+            ParseMutableClientConfiguration.applicationId = "XR8fncEaMFY9pzeZ7Cb7YF6kMkjrRV5rAMnMxJ31";
+            
+            ParseMutableClientConfiguration.clientKey = "9WN6gCM66Az9N3tYjHfsqE0rI3Hs7ctgBCcp9AHl";
+            
+            ParseMutableClientConfiguration.server = "http://in.herokuapp.com/parse";
+        
+        });
+        
+        Parse.initializeWithConfiguration(config)
         
         /*
         //Old Parse
