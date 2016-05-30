@@ -8,7 +8,6 @@
 
 import UIKit
 import Bolts
-import Parse
 import CoreLocation
 
 
@@ -18,6 +17,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     
     var locationManager: CLLocationManager?
+   
+    
+    override init() {
+        
+        //Firebase
+        FIRApp.configure()
+        
+        FIRDatabase.database().persistenceEnabled = true
+        
+    }
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         
@@ -34,35 +43,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         }
         
+        
+        
         //Ask user if we can use their location
         locationManager = CLLocationManager()
         locationManager?.requestWhenInUseAuthorization()
-        
-        //Parse on Heroku
-        let config = ParseClientConfiguration(block: {
-        
-            (ParseMutableClientConfiguration) -> Void in
-            
-            ParseMutableClientConfiguration.applicationId = "XR8fncEaMFY9pzeZ7Cb7YF6kMkjrRV5rAMnMxJ31";
-            
-            ParseMutableClientConfiguration.clientKey = "9WN6gCM66Az9N3tYjHfsqE0rI3Hs7ctgBCcp9AHl";
-            
-            ParseMutableClientConfiguration.server = "http://in.herokuapp.com/parse";
-        
-        });
-        
-        Parse.initializeWithConfiguration(config)
-        
-        /*
-        //Old Parse
-        // [Optional] Power your app with Local Datastore. For more info, go to
-        // https://parse.com/docs/ios/guide#local-datastore
-        Parse.enableLocalDatastore()
-        // Initialize Parse.
-        Parse.setApplicationId("XR8fncEaMFY9pzeZ7Cb7YF6kMkjrRV5rAMnMxJ31", clientKey: "3RQ1eHwSs8tiCh1IqIt0aoWHpNzJJs8Htz4fkiFV")
-        // [Optional] Track statistics around application opens.
-        PFAnalytics.trackAppOpenedWithLaunchOptions(launchOptions)
-        */
         
         return true
     

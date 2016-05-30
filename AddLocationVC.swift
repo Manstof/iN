@@ -9,7 +9,6 @@
 import UIKit
 import CoreLocation
 import MapKit
-import Parse
 
 class AddLocationVC: UIViewController, CLLocationManagerDelegate, MKMapViewDelegate, UISearchBarDelegate, UIPopoverPresentationControllerDelegate, UIAdaptivePresentationControllerDelegate {
     

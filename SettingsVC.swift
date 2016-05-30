@@ -7,7 +7,6 @@
 //
 
 import UIKit
-import Parse
 
 class SettingsVC: UITableViewController {
     
@@ -139,6 +138,14 @@ class SettingsVC: UITableViewController {
         }
 
         return cell
+        
+    }
+    
+    override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+        
+        if indexPath.section == 3 {
+            
+        }
         
     }
     

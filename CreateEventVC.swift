@@ -9,30 +9,29 @@
 import UIKit
 import Contacts
 import ContactsUI
+import Firebase
+
 
 class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextFieldDelegate, UITextViewDelegate, UIPickerViewDelegate, CNContactPickerDelegate {
     
     //UI Elements
     @IBOutlet weak var imageScrollView: UIScrollView!
     @IBOutlet weak var imageView: UIImageView!
-    @IBOutlet weak var eventNameLabel: UITextField!
+    @IBOutlet weak var eventNameField: UITextField!
+    @IBOutlet weak var locationLabel: UILabel!
+    @IBOutlet weak var locationSubtitle: UILabel!
     @IBOutlet weak var startDateLabel: UILabel!
     @IBOutlet weak var startDateDetailLabel: UILabel!
     @IBOutlet weak var startDatePicker: UIDatePicker!
     @IBOutlet weak var endDateLabel: UILabel!
     @IBOutlet weak var endDateDetailLabel: UILabel!
     @IBOutlet weak var endDatePicker: UIDatePicker!
-    @IBOutlet weak var locationLabel: UITextField!
-    @IBOutlet weak var locationSubtitle: UILabel!
-    @IBOutlet weak var contactsLabel: UILabel!
+    @IBOutlet weak var guestsLabel: UILabel!
     @IBOutlet weak var privateEventLabel: UILabel!
     @IBOutlet weak var openEventSwitch: UISwitch!
     @IBOutlet weak var eventCostLabel: UILabel!
-    @IBOutlet weak var eventCostValue: UITextField!
+    @IBOutlet weak var eventCostField: UITextField!
     @IBOutlet weak var additionalDetailsLabel: UILabel!
-    
-    //Firebase
-    var firebaseRef = Firebase(url: "https://in-events.firebaseio.com/")
 
     //Constraints: Image
     @IBOutlet weak var imageConstraintTop: NSLayoutConstraint!
@@ -45,10 +44,11 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     var lastZoomScale: CGFloat = -1
     var startDatePickerHidden: Bool = true
     var endDatePickerHidden: Bool = true
-    var detailText: String = ""
-    var detailPlaceholderText: String = ""
     var activeField: UITextField?
     var unwindSender: String = ""
+    
+    //Firebase
+    let ref = FIRDatabase.database().reference()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -57,8 +57,7 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         tableView.tableFooterView = UIView(frame: CGRectZero)
         
         //Set up self sizing cells
-        tableView.estimatedRowHeight = 60.0
-        
+        tableView.estimatedRowHeight = 50.0
         tableView.rowHeight = UITableViewAutomaticDimension
         
         //Tap gesture recognizer for the UIImage
@@ -67,27 +66,40 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         imageScrollView.addGestureRecognizer(tapRecognizer)
         
         //Set delegates for textFields
-        self.eventNameLabel.delegate = self //To Dismiss Keyboard
-        
-        self.eventCostValue.delegate = self //To Dismiss Keyboard
+        self.eventNameField.delegate = self //To Dismiss Keyboard
+        self.eventCostField.delegate = self //To Dismiss Keyboard
         
         //Set tags for textFields
-        eventNameLabel.tag = 0
-        
-        eventCostValue.tag = 1
+        eventNameField.tag = 0
+        eventCostField.tag = 1
         
         //Hide keyboard from Utility.swift
         self.hideKeyboardWhenTappedAround()
         
         //Adding the done button to the number keyboard
-        self.addDoneButtonOnKeyboard(eventCostValue)
+        self.addDoneButtonOnKeyboard(eventCostField)
+        
+        //Set intervals on pickers
+        startDatePicker.minuteInterval = 5
+        endDatePicker.minuteInterval = 5
         
         //Setup switch
-        openEventSwitch.addTarget(self, action: #selector(CreateEventVC.switchIsChanged(_:)), forControlEvents: UIControlEvents.ValueChanged)
-        
+        //openEventSwitch.addTarget(self, action: #selector(CreateEventVC.switchIsChanged(_:)), forControlEvents: UIControlEvents.ValueChanged)
         openEventSwitch.tintColor = globalColor.inBlue
-        
         openEventSwitch.onTintColor = globalColor.inBlue
+        
+        //Firebase TODO Make this better
+        FIRAuth.auth()?.addAuthStateDidChangeListener { auth, user in
+            
+            if let user = user {
+            
+                event.info.hostUID = user.uid //TODO make this the username in lieu of id?
+            
+            } else {
+                
+                // No user is signed in.
+            }
+        }
         
     }
     
@@ -159,11 +171,7 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     
     override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         
-        if indexPath.section == 0 && indexPath.row == 0 { //Image
-            
-            //Do Nothing
-            
-        } else if indexPath.section == 1 && indexPath.row == 1 { //Location
+        if indexPath.section == 1 && indexPath.row == 1 { //Location
             
             performSegueWithIdentifier("createEventToAddLocation", sender: self)
             
@@ -181,7 +189,7 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
             
         } else if indexPath.section == 3 && indexPath.row == 2 { //Cost
             
-            eventCostValue.becomeFirstResponder()
+            eventCostField.becomeFirstResponder()
             
         } else if indexPath.section == 3 && indexPath.row == 3 { //Additional Details
             
@@ -216,7 +224,7 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         
         } else if indexPath.section == 3 && indexPath.row == 3 { //Additional Detail
             
-            if event.info.additionalDetails == event.info.additionalDetailsPlaceholder {
+            if event.info.additionalDetails == "" {
                 
                 return 50
                 
@@ -450,15 +458,16 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     
     override func scrollViewWillBeginDragging(scrollView: UIScrollView) {
         
-        //Resign responders to get rid of "error"
-        eventCostLabel.resignFirstResponder()
+        //Resign responders to get rid of BS "error"
+        eventCostField.resignFirstResponder()
         
-        eventNameLabel.resignFirstResponder()
+        eventNameField.resignFirstResponder()
         
     }
     
     //Adding a toolbar to the number keyboard
     //a slightly more generalized solution based on above
+    //TODO: Move to a different file
     func addDoneButtonOnKeyboard(view: UIView?) {
         
         let doneToolbar: UIToolbar = UIToolbar(frame: CGRectMake(0, 0, tableView.bounds.size.width, 50))
@@ -618,7 +627,7 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         case 1:
             
             //Create textField that only accepts numbers and is formatted for $
-            let oldText = eventCostValue.text! as NSString
+            let oldText = eventCostField.text! as NSString
             
             var newText = oldText.stringByReplacingCharactersInRange(range, withString: string) as NSString!
             
@@ -649,11 +658,11 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
             
             if newText.length <= 13 {
                 
-                eventCostValue.text = newText as String
+                eventCostField.text = newText as String
                 
-                eventCostLabel.textColor = UIColor.blackColor()
+                eventCostField.textColor = UIColor.blackColor()
                 
-                event.info.cost = eventCostValue.text
+                event.info.cost = eventCostField.text
                 
             }
             
@@ -695,20 +704,20 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         if event.info.guests.count >= 1 {
             
             //TODO something Pretty
-            contactsLabel.text = "\(event.info.guests.count) Guests Invited"
+            guestsLabel.text = "\(event.info.guests.count) Guests Invited"
             
-            contactsLabel.textColor = UIColor.blackColor()
+            guestsLabel.textColor = UIColor.blackColor()
             
-            contactsLabel.numberOfLines = 0
+            guestsLabel.numberOfLines = 0
             
-            contactsLabel.lineBreakMode = NSLineBreakMode.ByWordWrapping
+            guestsLabel.lineBreakMode = NSLineBreakMode.ByWordWrapping
            
             unwindSender = "InviteGuestsVC"
             
         }
         
         //Working with AddDetailsVC data
-        if event.info.additionalDetails != event.info.additionalDetailsPlaceholder {
+        if event.info.additionalDetails != "" {
                 
             additionalDetailsLabel.text = event.info.additionalDetails
                 
@@ -726,13 +735,15 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     
     @IBAction func nextBarButton(sender: AnyObject) {
         
+        //TODO Verify all the information that the user input
+        
         //event.info.host = Current User
-        event.info.name = eventNameLabel.text
+        event.info.name = eventNameField.text
         
-        let firebaseEventID = "\(event.info.host)-\(timestamp)"
-        
-        //Save the data for the event
-        let createdEvents = ["eventName": event.info.name,
+        //Structure event data
+        let createdEvents = ["eventHostUID": event.info.hostUID,
+                             "eventCreated": timestamp,
+                             "eventName": event.info.name,
                              "eventLocationName": event.info.locationName,
                              "eventLocationAddress": event.info.locationAddress,
                              "eventStartDate": event.info.startDateString,
@@ -742,14 +753,24 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
                              "eventCost": event.info.cost,
                              "eventAdditionalDetails": event.info.additionalDetails]
         
-        let firebaseEventRef = Firebase(url: "https://in-events.firebaseio.com/events/")
+        let eventID = "\(event.info.hostUID)-\(timestamp)"
         
-        let createdEventsRef = firebaseEventRef.childByAppendingPath(firebaseEventID)
+        //save to events tree
+        let firebaseEventKey = ref.child("events").child(eventID)
         
-        createdEventsRef.setValue(createdEvents)
+        firebaseEventKey.setValue(createdEvents)
+        
+        //Save the event to the users tree
+        let firebaseUserEventKey = ref.child("users").child(event.info.hostUID).child("usersEvents").child(eventID)
+        
+        firebaseUserEventKey.setValue(createdEvents)
         
         //Working with guests
+        var guestCount = 1
+        
         for guest in event.info.guests {
+            
+            //TODO Check if user exists
             
             //Format phone number
             var formattedPhoneNumber = ""
@@ -781,21 +802,11 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
                               "phoneNumber": formattedPhoneNumber,
                               "imageBase64String": imageBase64String]
             
-            let firebaseEventGuestRef = Firebase(url: "https://in-events.firebaseio.com/events/\(firebaseEventID)/eventGuests/")
             
-            let eventGuestRef = firebaseEventGuestRef.childByAppendingPath(guest.givenName + " " + guest.familyName)  //TODO: Make this the users handle
+            //TODO: Make this the users handle
+            firebaseEventKey.child("eventGuests").child("guest \(guestCount)").updateChildValues(eventGuest)
             
-            eventGuestRef.setValue(eventGuest)
-            
-            //Save Event to users list of events
-            let usersEvents = ["eventID": firebaseEventID]
-            
-            let firebaseUsersEventsRef = Firebase(url: "https://in-events.firebaseio.com/usersEvents/")
-            
-            let usersEventRef = firebaseUsersEventsRef.childByAppendingPath(guest.givenName + " " + guest.familyName) //TODO: Make this the users handle
-            
-            usersEventRef.setValue(usersEvents)
-            
+            guestCount += 1
         }
         
         /*

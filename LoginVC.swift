@@ -7,7 +7,7 @@
 //
 
 import UIKit
-import Parse
+import Firebase
 
 class LoginVC: UIViewController, UITextFieldDelegate {
 
@@ -23,9 +23,27 @@ class LoginVC: UIViewController, UITextFieldDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+
+//        FIRAuth.auth()?.addAuthStateDidChangeListener { auth, user in
+//            if let user = user {
+//
+//                print("\(user) is logged in")
+//
+//                self.performSegueWithIdentifier("loginToTabs", sender: self)
+//
+//            } else {
+//                
+//            }
+//        }
+
         
-        //check if user is logged in then segue
+        let backgroundImage = UIImageView(frame: UIScreen.mainScreen().bounds)
+        backgroundImage.image = UIImage(named: "splashPage")
+        backgroundImage.blurImage(backgroundImage)
         
+        self.view.insertSubview(backgroundImage, atIndex: 0)
+        
+        //Set Delegates
         self.emailField.delegate = self
         self.passwordField.delegate = self
         
@@ -33,55 +51,69 @@ class LoginVC: UIViewController, UITextFieldDelegate {
         self.hideKeyboardWhenTappedAround()
         
     }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
+    
+    override func viewDidLayoutSubviews() {
+        
+        //White Border
+        let border = CALayer()
+        let width = CGFloat(4.0)
+        
+        border.borderColor = UIColor.whiteColor().CGColor
+        
+        border.frame = CGRect(x: 0, y: 0, width:  emailField.frame.size.width, height: emailField.frame.size.height)
+        
+        border.borderWidth = width
+        
+        emailField.layer.addSublayer(border)
+        emailField.layer.masksToBounds = true
+        
+        passwordField.layer.addSublayer(border)
+        passwordField.layer.masksToBounds = true
+    
+        
+    }
+    
+    override func viewWillAppear(animated: Bool) {
         
     }
     
     @IBAction func signupButtonPressed(sender: AnyObject) {
-    
-        let ref = Firebase(url: firebaseInformation.firebaseURLString)
         
-        ref.createUser(emailField.text,
-                       password: passwordField.text,
-                       withValueCompletionBlock: { error, result in
-                       
-                        if error != nil {
-                            
-                            print(error)
-                            
-                        } else {
-                        
-                            let userID = result["uid"] as? String
-                            
-                            print("Successfully created user account with uid: \(userID)")
-                        
-                        }
-        })
+        
+        
+        
+        performSegueWithIdentifier("loginToEditProfile", sender: self)
+        
     }
     
     @IBAction func loginButtonPressed(sender: AnyObject) {
         
-        let ref = Firebase(url: firebaseInformation.firebaseURLString)
+        //TODO make the username lookup the email so they could sign in with username too
+       
+        if emailField.text != nil || passwordField.text != nil {
+            
+            FIRAuth.auth()?.signInWithEmail(emailField.text!, password: passwordField.text!) { (user, error) in
+                
+                if error != nil {
+                    
+                    print(error)
+                    
+                } else {
+                    
+                    print("\(user) Logged In")
+                    
+                }
+                
+            }
+        } else {
+            
+            //TODO make alert so check if fields are nil
+            print("email or password field is nil when logging in")
+            
+        }
         
-        ref.authUser(emailField.text,
-                     password: passwordField.text,
-                     withCompletionBlock: { error, authData in
-                        
-                        if error != nil {
-                     
-                            print(error)
-                        
-                        } else {
-                        
-                            print("User Logged In")
-                            
-                            self.performSegueWithIdentifier("loginToTabs", sender: self)
-                            
-                        }
-        })
     }
+    
     // █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █
     // -------------------------------------------------------------------------------
     // ╬═══ MARK ═ Keyboard ═══╬
@@ -142,6 +174,8 @@ class LoginVC: UIViewController, UITextFieldDelegate {
         return false
         
     }
+    
+    //TODO Add unwind segue from signup
 
     
 }

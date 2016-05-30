@@ -7,49 +7,95 @@
 //
 
 import UIKit
-import Parse
+import Firebase
 
 class EventsFeedVC: UITableViewController {
+    
+    var eventRef: FIRDatabaseReference!
+    
+    let ref = FIRDatabase.database().reference()
+    
+    var eventCellArray = [NSDictionary]()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        loadUsersEvents()
+        
         //Eliminate the title of the back button when navigating to different views
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .Plain, target: nil, action: nil)
-
-        // Uncomment the following line to preserve selection between presentations
-        // self.clearsSelectionOnViewWillAppear = false
-
-        // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-        // self.navigationItem.rightBarButtonItem = self.editButtonItem()
+        
     }
 
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+    override func viewWillAppear(animated: Bool) {
+        
+        
+        
+    }
+    
+    func loadUsersEvents() {
+        
+        //Firebase
+        FIRAuth.auth()?.addAuthStateDidChangeListener { auth, user in
+            
+            if let user = user {
+                
+                self.ref.child("users").child(user.uid).child("usersEvents").observeSingleEventOfType(.Value, withBlock: { snapshot in
+                    
+                    if snapshot.exists() {
+                        
+                        let child = snapshot.children
+                        
+                        while let childSnapshot = child.nextObject() as? FIRDataSnapshot {
+                            
+                            if childSnapshot.exists() {
+                                
+                                let eventSnapshot = childSnapshot.value as! NSDictionary
+                                
+                                //event.info.name = eventSnapshot.valueForKey("eventName") as! String
+                                
+                                self.eventCellArray.append(eventSnapshot)
+                                
+                                print(self.eventCellArray)
+                                
+                                self.tableView.reloadData()
+                            }
+                        }
+                    }
+                })
+                
+            } else {
+                
+                // No user is signed in.
+            
+            }
+        }
     }
 
     // MARK: - Table view data source
-
     override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
-        // #warning Incomplete implementation, return the number of sections
-        return 0
+        
+        return 1
     }
 
     override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        // #warning Incomplete implementation, return the number of rows
-        return 0
+        
+        return eventCellArray.count
     }
 
-    /*
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier("reuseIdentifier", forIndexPath: indexPath)
-
-        // Configure the cell...
-
+        
+        let cell = tableView.dequeueReusableCellWithIdentifier("cell", forIndexPath: indexPath) as! EventsFeedCell
+        
+        print(eventCellArray[indexPath.row])
+        
+        cell.nameLabel.text = eventCellArray[indexPath.row]["eventName"] as? String
+        
+        cell.hostLabel.text = eventCellArray[indexPath.row]["eventHostUID"] as? String
+        
         return cell
     }
-    */
+    
 
     /*
     // Override to support conditional editing of the table view.

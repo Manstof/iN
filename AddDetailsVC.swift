@@ -7,24 +7,27 @@
 //
 
 import UIKit
-import Parse
 
 class AddDetailsVC: UIViewController, UITextViewDelegate {
     
     @IBOutlet weak var textView: UITextView!
+    
+    let placeholderText = "Enter event additional details"
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        textView.text = event.info.additionalDetails
-        
-        if event.info.additionalDetails == event.info.additionalDetailsPlaceholder {
+        if event.info.additionalDetails == "" {
         
             textView.textColor = UIColor.lightGrayColor()
+            
+            textView.text = placeholderText
         
         } else {
             
             textView.textColor = UIColor.blackColor()
+            
+            textView.text = event.info.additionalDetails
             
         }
         
@@ -39,7 +42,7 @@ class AddDetailsVC: UIViewController, UITextViewDelegate {
         textView.selectedTextRange = textView.textRangeFromPosition(textView.beginningOfDocument, toPosition: textView.beginningOfDocument)
         
         //Set cursor position
-        if event.info.additionalDetails != event.info.additionalDetailsPlaceholder {
+        if event.info.additionalDetails != "" {
         
             let newPosition = textView.endOfDocument
         
@@ -90,7 +93,7 @@ class AddDetailsVC: UIViewController, UITextViewDelegate {
         //Combine the textView text and the replacement text to create the updated text string
         let currentText:NSString = textView.text
         
-        if currentText == event.info.additionalDetailsPlaceholder {
+        if currentText == placeholderText {
             
             textView.text = nil
             
@@ -103,7 +106,7 @@ class AddDetailsVC: UIViewController, UITextViewDelegate {
         //If updated text view will be empty, add the placeholder and set the cursor to the beginning of the text view
         if updatedText.isEmpty {
             
-            textView.text = event.info.additionalDetailsPlaceholder
+            textView.text = placeholderText
             
             textView.textColor = UIColor.lightGrayColor()
             

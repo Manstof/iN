@@ -7,85 +7,201 @@
 //
 
 import UIKit
-import Parse
+import Firebase
 
-class EditProfileVC: UITableViewController {
+class EditProfileVC: UIViewController, UITextFieldDelegate {
 
+    
+    @IBOutlet weak var nameField: UITextField!
+    @IBOutlet weak var phoneNumberField: UITextField!
+    @IBOutlet weak var usernameField: UITextField!
+    @IBOutlet weak var emailField: UITextField!
+    @IBOutlet weak var passwordField: UITextField!
+    @IBOutlet weak var confirmPasswordField: UITextField!
+    
+    //Utility
+    var activeField: UITextField?
+    
+    //Firebase
+    
+    let ref = FIRDatabase.database().reference()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        //Set text field delegates
+        self.nameField.delegate = self
+        self.phoneNumberField.delegate = self
+        self.usernameField.delegate = self
+        self.emailField.delegate = self
+        self.passwordField.delegate = self
+        self.confirmPasswordField.delegate = self
 
+    }
+    
+    override func viewWillAppear(animated: Bool) {
+        
+        
+    
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         
     }
-
-    override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
-        
-        return 0
     
-    }
-
-    override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    @IBAction func signupButtonPressed(sender: AnyObject) {
         
-        return 0
+        verifyUserInput()
+        
+        if verifyUserInput() == true {
+            
+            FIRAuth.auth()?.createUserWithEmail(emailField.text!, password: passwordField.text!, completion: { (user, error) in
+                
+                if error != nil {
+                    
+                    print(error)
+                    
+                } else {
+                    
+                    if user != nil {
+                        
+                        //TODO add photo to save
+                        //TODO check if username is taken
+                        let userProfile = ["name": self.nameField.text!, "phoneNumber": self.phoneNumberField.text!, "username": self.usernameField.text!, "emailAddress": self.emailField.text!]
+                        
+                        self.ref.child("users").child(user!.uid).setValue(userProfile)
+                        
+                        let userID = user?.uid
+                        
+                        print("Successfully created user account with uid: \(userID)")
+                        
+                        self.performSegueWithIdentifier("editProfileToTabs", sender: self)
+                        
+                    } else {
+                        
+                        print("Failed Creating User Database on Auth in EditProfieVC.swift")
+                    }
+                }
+            })
+        
+        } else {
+         
+            print("User input not working")
+            
+        }
+    }
     
-    }
-
-    /*
-    override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier("reuseIdentifier", forIndexPath: indexPath)
-
-        // Configure the cell...
-
-        return cell
-    }
-    */
-
-    /*
-    // Override to support conditional editing of the table view.
-    override func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
-        // Return false if you do not want the specified item to be editable.
+            
+    func verifyUserInput() -> Bool {
+        
+        if nameField.text?.isEmpty == true {
+            
+            let alert = UIAlertController(title: "Signup Failed", message: "Please enter your name", preferredStyle: UIAlertControllerStyle.Alert)
+            alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default, handler: nil))
+            self.presentViewController(alert, animated: true, completion: nil)
+            
+        } else if phoneNumberField.text?.isEmpty == true || phoneNumberField.text?.characters.count != 10 {
+            
+            let alert = UIAlertController(title: "Signup Failed", message: "Please enter a valid phone number", preferredStyle: UIAlertControllerStyle.Alert)
+            alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default, handler: nil))
+            self.presentViewController(alert, animated: true, completion: nil)
+            
+        } else if usernameField.text?.isEmpty == true /*TODO check if username exists*/ {
+            
+            let alert = UIAlertController(title: "Signup Failed", message: "Please enter a valid username", preferredStyle: UIAlertControllerStyle.Alert)
+            alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default, handler: nil))
+            self.presentViewController(alert, animated: true, completion: nil)
+            
+        } else if emailField.text?.isEmpty == true || emailField.text?.containsString("@") != true || emailField.text?.containsString(".") != true {
+        
+            let alert = UIAlertController(title: "Signup Failed", message: "Please enter a valid email address", preferredStyle: UIAlertControllerStyle.Alert)
+            alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default, handler: nil))
+            self.presentViewController(alert, animated: true, completion: nil)
+            
+        } else if passwordField.text?.isEmpty == true {
+            
+            let alert = UIAlertController(title: "Signup Failed", message: "Please enter your password", preferredStyle: UIAlertControllerStyle.Alert)
+            alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default, handler: nil))
+            self.presentViewController(alert, animated: true, completion: nil)
+            
+        } else if passwordField.text != confirmPasswordField.text {
+        
+            let alert = UIAlertController(title: "Signup Failed", message: "Passwords do not match", preferredStyle: UIAlertControllerStyle.Alert)
+            alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default, handler: nil))
+            self.presentViewController(alert, animated: true, completion: nil)
+        
+        } else {
+        
         return true
+        
+        }
+        
+        return false
     }
-    */
-
-    /*
-    // Override to support editing the table view.
-    override func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
-        if editingStyle == .Delete {
-            // Delete the row from the data source
-            tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
-        } else if editingStyle == .Insert {
-            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-        }    
+    
+    // █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █
+    // -------------------------------------------------------------------------------
+    // ╬═══ MARK ═ Keyboard ═══╬
+    
+    func keyboardWasShown(notification: NSNotification) {
+        
+        //Calculate the keyboard size and adjust the tableView
+        let info : NSDictionary = notification.userInfo!
+        
+        let keyboardSize = (info[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue().size
+        
+        let contentInsets : UIEdgeInsets = UIEdgeInsetsMake(0.0, 0.0, keyboardSize!.height, 0.0)
+        
+        //Scroll if the firstResponder is behind the keyboard
+        var viewRect : CGRect = self.view.frame
+        
+        viewRect.size.height -= keyboardSize!.height
+        
+        if (!CGRectContainsPoint(viewRect, activeField!.frame.origin)) {
+            
+            //Move the view
+            
+        }
     }
-    */
-
-    /*
-    // Override to support rearranging the table view.
-    override func tableView(tableView: UITableView, moveRowAtIndexPath fromIndexPath: NSIndexPath, toIndexPath: NSIndexPath) {
-
+    
+    func keyboardWillBeHidden(notification: NSNotification) {
+        
+        //Once keyboard disappears, restore original positions of the view
+        let tabBarHeight = tabBarController!.tabBar.frame.size.height
+        
+        let navigationBarHeight = navigationController!.navigationBar.frame.size.height
+        
+        let contentInsets : UIEdgeInsets = UIEdgeInsetsMake(navigationBarHeight, 0.0, tabBarHeight, 0.0)
+        
+        //Move the view back down
+        
+        self.view.endEditing(true)
+        
     }
-    */
-
-    /*
-    // Override to support conditional rearranging of the table view.
-    override func tableView(tableView: UITableView, canMoveRowAtIndexPath indexPath: NSIndexPath) -> Bool {
-        // Return false if you do not want the item to be re-orderable.
-        return true
+    
+    func textFieldDidBeginEditing(textField: UITextField) {
+        
+        activeField = textField //Passes to keyboardWasShown to identify textField
+        
     }
-    */
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
+    
+    func textFieldDidEndEditing(textField: UITextField) {
+        
+        activeField = nil //Passes to keyboardWasShown to deselect textField
+        
     }
-    */
+    
+    //Dismiss the keyboard on return button
+    func textFieldShouldReturn(textField: UITextField) -> Bool {
+        
+        self.view.endEditing(true)
+        
+        return false
+        
+    }
 
+    
+    
+    
 }
