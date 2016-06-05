@@ -12,7 +12,7 @@ import Firebase
 class LoginVC: UIViewController, UITextFieldDelegate {
 
     //UI Elements
-    @IBOutlet weak var emailField: UITextField!
+    @IBOutlet weak var emailAddressField: UITextField!
     @IBOutlet weak var passwordField: UITextField!
     @IBOutlet weak var signupButton: UIButton!
     @IBOutlet weak var loginButton: UIButton!
@@ -35,16 +35,13 @@ class LoginVC: UIViewController, UITextFieldDelegate {
 //                
 //            }
 //        }
+        
+        //Register Keyboard
+//        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(LoginVC.keyboardWasShown(_:)), name: UIKeyboardWillShowNotification, object: nil)
+//        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(LoginVC.keyboardWillBeHidden(_:)), name: UIKeyboardWillHideNotification, object: nil)
 
-        
-        let backgroundImage = UIImageView(frame: UIScreen.mainScreen().bounds)
-        backgroundImage.image = UIImage(named: "splashPage")
-        backgroundImage.blurImage(backgroundImage)
-        
-        self.view.insertSubview(backgroundImage, atIndex: 0)
-        
         //Set Delegates
-        self.emailField.delegate = self
+        self.emailAddressField.delegate = self
         self.passwordField.delegate = self
         
         //Hide keyboard from Functions.swift
@@ -54,22 +51,15 @@ class LoginVC: UIViewController, UITextFieldDelegate {
     
     override func viewDidLayoutSubviews() {
         
-        //White Border
-        let border = CALayer()
-        let width = CGFloat(4.0)
+        //Set Background Image
+        let backgroundImage = UIImageView(frame: UIScreen.mainScreen().bounds)
+        backgroundImage.image = UIImage(named: "splashPage")
+        backgroundImage.blurImage(backgroundImage)
+        self.view.insertSubview(backgroundImage, atIndex: 0)
         
-        border.borderColor = UIColor.whiteColor().CGColor
-        
-        border.frame = CGRect(x: 0, y: 0, width:  emailField.frame.size.width, height: emailField.frame.size.height)
-        
-        border.borderWidth = width
-        
-        emailField.layer.addSublayer(border)
-        emailField.layer.masksToBounds = true
-        
-        passwordField.layer.addSublayer(border)
-        passwordField.layer.masksToBounds = true
-    
+        //Set Border Colors
+        passwordField.setTextFieldBorderColor(UIColor.whiteColor())
+        emailAddressField.setTextFieldBorderColor(UIColor.whiteColor())
         
     }
     
@@ -77,10 +67,13 @@ class LoginVC: UIViewController, UITextFieldDelegate {
         
     }
     
+    override func viewWillDisappear(animated: Bool) {
+        
+        deregisterFromKeyboardNotifications()
+        
+    }
+    
     @IBAction func signupButtonPressed(sender: AnyObject) {
-        
-        
-        
         
         performSegueWithIdentifier("loginToEditProfile", sender: self)
         
@@ -89,29 +82,60 @@ class LoginVC: UIViewController, UITextFieldDelegate {
     @IBAction func loginButtonPressed(sender: AnyObject) {
         
         //TODO make the username lookup the email so they could sign in with username too
-       
-        if emailField.text != nil || passwordField.text != nil {
+        if emailAddressField.text?.isValidEmail == false {
             
-            FIRAuth.auth()?.signInWithEmail(emailField.text!, password: passwordField.text!) { (user, error) in
+            alert("Failed Log iN", message: "Please provide a valid email address")
+
+        } else if passwordField.text?.isValidPassword == false {
+            
+            alert("Failed Log iN", message:  "Password Incorrect")
+            
+        } else {
+            
+            FIRAuth.auth()?.signInWithEmail(emailAddressField.text!, password: passwordField.text!) { (user, error) in
                 
                 if error != nil {
                     
-                    print(error)
+                    let errorCode = error!.code
+                    
+                    //TODO Check other cases
+                    switch errorCode {
+                        
+                    case 17011:
+                        
+                        self.alert("Failed Log iN", message: "User account doesn't exist, please create one")
+                        
+                        break
+                        
+                    case 17999:
+                        
+                        print("17999")
+                        
+                        break
+                        
+                    default:
+                        
+                        self.alert("Failed Log iN", message: "An unknown error occured")
+                        
+                        print(error!.localizedDescription)
+                        
+                        break
+                        
+                    }
+                    
+                    self.alert("Failed Signup", message: "\(error)")
+                    
+                    print(error?.code)
                     
                 } else {
                     
-                    print("\(user) Logged In")
+                    //TODO Add Spinner
+                    
+                    self.performSegueWithIdentifier("loginToTabs", sender: self)
                     
                 }
-                
             }
-        } else {
-            
-            //TODO make alert so check if fields are nil
-            print("email or password field is nil when logging in")
-            
         }
-        
     }
     
     // █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █
@@ -120,37 +144,21 @@ class LoginVC: UIViewController, UITextFieldDelegate {
     
     func keyboardWasShown(notification: NSNotification) {
         
-        //Calculate the keyboard size and adjust the tableView
-        let info : NSDictionary = notification.userInfo!
+        if let keyboardSize = (notification.userInfo?[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue() {
+         
+            self.view.frame.origin.y -= keyboardSize.height
         
-        let keyboardSize = (info[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue().size
-        
-        let contentInsets : UIEdgeInsets = UIEdgeInsetsMake(0.0, 0.0, keyboardSize!.height, 0.0)
-        
-        //Scroll if the firstResponder is behind the keyboard
-        var viewRect : CGRect = self.view.frame
-        
-        viewRect.size.height -= keyboardSize!.height
-        
-        if (!CGRectContainsPoint(viewRect, activeField!.frame.origin)) {
-            
-            //Move the view
-            
         }
+
     }
     
     func keyboardWillBeHidden(notification: NSNotification) {
         
-        //Once keyboard disappears, restore original positions of the view
-        let tabBarHeight = tabBarController!.tabBar.frame.size.height
+        if let keyboardSize = (notification.userInfo?[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue() {
+         
+            self.view.frame.origin.y += keyboardSize.height
         
-        let navigationBarHeight = navigationController!.navigationBar.frame.size.height
-        
-        let contentInsets : UIEdgeInsets = UIEdgeInsetsMake(navigationBarHeight, 0.0, tabBarHeight, 0.0)
-        
-        //Move the view back down
-        
-        self.view.endEditing(true)
+        }
         
     }
     
@@ -174,8 +182,6 @@ class LoginVC: UIViewController, UITextFieldDelegate {
         return false
         
     }
-    
-    //TODO Add unwind segue from signup
-
-    
 }
+
+//TODO Add prepare for segue to pass username and pass if typed to the signup viewController

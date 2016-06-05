@@ -9,21 +9,6 @@ import Foundation
 import Contacts
 import UIKit
 
-
-//Timestamp function
-var timestamp: String {
-    
-    let timestamp = NSDate().timeIntervalSince1970
- 
-    var timeString = "\(timestamp)"
-    
-    timeString = timeString.stringByReplacingOccurrencesOfString(".", withString: "")
-    
-    return timeString
-
-}
-
-
 class spinner: NSObject {
     
     //Call With
@@ -59,37 +44,22 @@ class spinner: NSObject {
     }
 }
 
-
-extension UITableViewController {
+func phoneInputFormatter(phoneNumberString: String) -> String {
     
-    // Lifting the view up
-    func animateViewMoving (up:Bool, moveValue :CGFloat){
-        
-        let movementDuration:NSTimeInterval = 0.3
-        
-        let movement:CGFloat = ( up ? -moveValue : moveValue)
-        
-        UIView.beginAnimations( "animateView", context: nil)
-        
-        UIView.setAnimationBeginsFromCurrentState(true)
-        
-        UIView.setAnimationDuration(movementDuration )
-        
-        self.view.frame = CGRectOffset(self.view.frame, 0,  movement)
-        
-        UIView.commitAnimations()
-        
-    }
+    //Move from edit profile into this function
     
+    
+    return "String"
 }
 
+//Format Phone Numbers
 func phoneFormatter(phoneString: String) -> String {
     
     var unformattedNumber = phoneString.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
     
     unformattedNumber = unformattedNumber.stringByReplacingOccurrencesOfString("+", withString: "")
     
-    unformattedNumber = unformattedNumber.stringByReplacingOccurrencesOfString(" ", withString: "") //weird bug check Ali's number if code line removed
+    unformattedNumber = unformattedNumber.stringByReplacingOccurrencesOfString(" ", withString: "")
     
     unformattedNumber = unformattedNumber.stringByReplacingOccurrencesOfString(" ", withString: "")
     

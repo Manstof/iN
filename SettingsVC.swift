@@ -123,8 +123,6 @@ class SettingsVC: UITableViewController {
             
             logoutButton.frame = CGRectMake(0, 0, screenWidth, 60)
             
-            logoutButton.addTarget(self, action: Selector("buttonPressed:"), forControlEvents: UIControlEvents.TouchUpInside) //Figure out how to do this
-            
             logoutButton.tag = indexPath.row
             
             cell.contentView.addSubview(logoutButton)
@@ -144,6 +142,8 @@ class SettingsVC: UITableViewController {
     override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         
         if indexPath.section == 3 {
+            
+            print("Logout")
             
         }
         

@@ -9,6 +9,7 @@
 import UIKit
 import Bolts
 import CoreLocation
+import Firebase
 
 
 @UIApplicationMain
@@ -17,23 +18,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     
     var locationManager: CLLocationManager?
-   
     
     override init() {
         
         //Firebase
         FIRApp.configure()
         
-        FIRDatabase.database().persistenceEnabled = true
+        //FIRDatabase.database().persistenceEnabled = true
         
     }
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         
         //Make the navigation bar pretty
-        let iNBlue = UIColor(red: 107.0/255.0, green: 196.0/255.0, blue: 235.0/255.0, alpha: 1.0)
         
-        UINavigationBar.appearance().barTintColor = iNBlue
+        UINavigationBar.appearance().barTintColor = globalColor.inBlue
         
         UINavigationBar.appearance().tintColor = UIColor.whiteColor()
         

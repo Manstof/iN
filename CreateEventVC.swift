@@ -12,6 +12,7 @@ import ContactsUI
 import Firebase
 
 
+
 class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextFieldDelegate, UITextViewDelegate, UIPickerViewDelegate, CNContactPickerDelegate {
     
     //UI Elements
@@ -80,8 +81,8 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         self.addDoneButtonOnKeyboard(eventCostField)
         
         //Set intervals on pickers
-        startDatePicker.minuteInterval = 5
-        endDatePicker.minuteInterval = 5
+        startDatePicker.minuteInterval = 10
+        endDatePicker.minuteInterval = 10
         
         //Setup switch
         //openEventSwitch.addTarget(self, action: #selector(CreateEventVC.switchIsChanged(_:)), forControlEvents: UIControlEvents.ValueChanged)
@@ -612,6 +613,17 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
     // ╬═══ MARK ═ textFields ═══╬
     
     func textField(textField: UITextField, shouldChangeCharactersInRange range: NSRange, replacementString string: String) -> Bool {
+        
+        switch UITextField() {
+            
+        case eventCostField: break
+            
+        default:
+            
+            print("Maybe")
+            
+        }
+        
         
         switch textField.tag {
             

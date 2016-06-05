@@ -9,6 +9,7 @@
 import UIKit
 import Firebase
 
+
 class EventsFeedVC: UITableViewController {
     
     var eventRef: FIRDatabaseReference!
@@ -20,7 +21,7 @@ class EventsFeedVC: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        loadUsersEvents()
+        
         
         //Eliminate the title of the back button when navigating to different views
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .Plain, target: nil, action: nil)
@@ -29,7 +30,9 @@ class EventsFeedVC: UITableViewController {
 
     override func viewWillAppear(animated: Bool) {
         
+        eventCellArray.removeAll()
         
+        loadUsersEvents()
         
     }
     

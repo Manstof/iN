@@ -11,11 +11,10 @@ import Firebase
 
 class EditProfileVC: UIViewController, UITextFieldDelegate {
 
-    
-    @IBOutlet weak var nameField: UITextField!
     @IBOutlet weak var phoneNumberField: UITextField!
     @IBOutlet weak var usernameField: UITextField!
     @IBOutlet weak var emailField: UITextField!
+    @IBOutlet weak var confirmEmailField: UITextField!
     @IBOutlet weak var passwordField: UITextField!
     @IBOutlet weak var confirmPasswordField: UITextField!
     
@@ -23,17 +22,16 @@ class EditProfileVC: UIViewController, UITextFieldDelegate {
     var activeField: UITextField?
     
     //Firebase
-    
     let ref = FIRDatabase.database().reference()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         //Set text field delegates
-        self.nameField.delegate = self
         self.phoneNumberField.delegate = self
         self.usernameField.delegate = self
         self.emailField.delegate = self
+        self.confirmEmailField.delegate = self
         self.passwordField.delegate = self
         self.confirmPasswordField.delegate = self
 
@@ -41,8 +39,31 @@ class EditProfileVC: UIViewController, UITextFieldDelegate {
     
     override func viewWillAppear(animated: Bool) {
         
-        
+    }
     
+    override func viewWillLayoutSubviews() {
+        
+        //Set Background Image
+        let backgroundImage = UIImageView(frame: UIScreen.mainScreen().bounds)
+        backgroundImage.image = UIImage(named: "splashPage")
+        backgroundImage.blurImage(backgroundImage)
+        self.view.insertSubview(backgroundImage, atIndex: 0)
+        
+        //Borders
+        phoneNumberField.setTextFieldBorderColor(UIColor.whiteColor())
+        passwordField.setTextFieldBorderColor(UIColor.whiteColor())
+        confirmEmailField.setTextFieldBorderColor(UIColor.whiteColor())
+        confirmPasswordField.setTextFieldBorderColor(UIColor.whiteColor())
+        emailField.setTextFieldBorderColor(UIColor.whiteColor())
+        usernameField.setTextFieldBorderColor(UIColor.whiteColor())
+        
+        
+//TODO Get Padding to work
+//        let paddingView = UIView(frame: CGRectMake(0, 0, 15, self.myTextField.frame.height))
+//        myTextField.leftView = paddingView
+//        myTextField.leftViewMode = UITextFieldViewMode.Always
+//        
+        
     }
 
     override func didReceiveMemoryWarning() {
@@ -50,10 +71,33 @@ class EditProfileVC: UIViewController, UITextFieldDelegate {
         
     }
     
+    func textField(textField: UITextField, shouldChangeCharactersInRange range: NSRange, replacementString string: String) -> Bool {
+        
+        switch UITextField() {
+            
+        case phoneNumberField:
+            
+            print("switch Working")
+            
+            break
+            
+        default:
+            
+            print("Maybe")
+            
+            break
+            
+        }
+        
+        return false
+    }
+    
     @IBAction func signupButtonPressed(sender: AnyObject) {
         
-        verifyUserInput()
+        //Get this to actually validate from the validation file
         
+        verifyUserInput()
+                
         if verifyUserInput() == true {
             
             FIRAuth.auth()?.createUserWithEmail(emailField.text!, password: passwordField.text!, completion: { (user, error) in
@@ -68,7 +112,7 @@ class EditProfileVC: UIViewController, UITextFieldDelegate {
                         
                         //TODO add photo to save
                         //TODO check if username is taken
-                        let userProfile = ["name": self.nameField.text!, "phoneNumber": self.phoneNumberField.text!, "username": self.usernameField.text!, "emailAddress": self.emailField.text!]
+                        let userProfile = ["phoneNumber": self.phoneNumberField.text!, "username": self.usernameField.text!, "emailAddress": self.emailField.text!]
                         
                         self.ref.child("users").child(user!.uid).setValue(userProfile)
                         
@@ -80,57 +124,51 @@ class EditProfileVC: UIViewController, UITextFieldDelegate {
                         
                     } else {
                         
-                        print("Failed Creating User Database on Auth in EditProfieVC.swift")
+                        print("Failed Creating User Entry for Database on Auth in EditProfieVC.swift")
                     }
                 }
             })
         
         } else {
          
-            print("User input not working")
+            alert("Something went wrong", message: "Please check all fields and try again")
             
         }
     }
-    
             
     func verifyUserInput() -> Bool {
         
-        if nameField.text?.isEmpty == true {
-            
-            let alert = UIAlertController(title: "Signup Failed", message: "Please enter your name", preferredStyle: UIAlertControllerStyle.Alert)
-            alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default, handler: nil))
-            self.presentViewController(alert, animated: true, completion: nil)
-            
-        } else if phoneNumberField.text?.isEmpty == true || phoneNumberField.text?.characters.count != 10 {
-            
-            let alert = UIAlertController(title: "Signup Failed", message: "Please enter a valid phone number", preferredStyle: UIAlertControllerStyle.Alert)
-            alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default, handler: nil))
-            self.presentViewController(alert, animated: true, completion: nil)
-            
-        } else if usernameField.text?.isEmpty == true /*TODO check if username exists*/ {
-            
-            let alert = UIAlertController(title: "Signup Failed", message: "Please enter a valid username", preferredStyle: UIAlertControllerStyle.Alert)
-            alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default, handler: nil))
-            self.presentViewController(alert, animated: true, completion: nil)
-            
-        } else if emailField.text?.isEmpty == true || emailField.text?.containsString("@") != true || emailField.text?.containsString(".") != true {
+        let alertTitle = "Failed Signup"
         
-            let alert = UIAlertController(title: "Signup Failed", message: "Please enter a valid email address", preferredStyle: UIAlertControllerStyle.Alert)
-            alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default, handler: nil))
-            self.presentViewController(alert, animated: true, completion: nil)
+        if usernameField.text?.isValidUsername != true {
             
-        } else if passwordField.text?.isEmpty == true {
+            alert(alertTitle, message: "Username can only contain alphanumeric characters, '-' '.' and '_'")
             
-            let alert = UIAlertController(title: "Signup Failed", message: "Please enter your password", preferredStyle: UIAlertControllerStyle.Alert)
-            alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default, handler: nil))
-            self.presentViewController(alert, animated: true, completion: nil)
+        } else if usernameField.text?.isUsernameTaken == true {
+            
+            alert(alertTitle, message: "Username is taken, please try another one")
+        
+        } else if phoneNumberField.text?.isValidPhoneNumber != true {
+            
+            //TODO Format the phone number input field
+            alert(alertTitle, message: "Please enter a valid phone number")
+            
+        } else if emailField.text?.isValidEmail != true {
+        
+            alert(alertTitle, message: "Please enter a valid email address")
+            
+        } else if emailField.text != confirmEmailField.text {
+        
+            alert(alertTitle, message: "Email addresses fields do not match" )
+            
+        } else if passwordField.text?.isValidPassword != true {
+            
+            alert(alertTitle, message: "Please enter a valid password.  Passwords must be alphanumeric and at least 7 characters in legnth")
             
         } else if passwordField.text != confirmPasswordField.text {
         
-            let alert = UIAlertController(title: "Signup Failed", message: "Passwords do not match", preferredStyle: UIAlertControllerStyle.Alert)
-            alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default, handler: nil))
-            self.presentViewController(alert, animated: true, completion: nil)
-        
+            alert(alertTitle, message: "Password fields do not match")
+            
         } else {
         
         return true
@@ -146,37 +184,13 @@ class EditProfileVC: UIViewController, UITextFieldDelegate {
     
     func keyboardWasShown(notification: NSNotification) {
         
-        //Calculate the keyboard size and adjust the tableView
-        let info : NSDictionary = notification.userInfo!
+        //TODO Move View
         
-        let keyboardSize = (info[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue().size
-        
-        let contentInsets : UIEdgeInsets = UIEdgeInsetsMake(0.0, 0.0, keyboardSize!.height, 0.0)
-        
-        //Scroll if the firstResponder is behind the keyboard
-        var viewRect : CGRect = self.view.frame
-        
-        viewRect.size.height -= keyboardSize!.height
-        
-        if (!CGRectContainsPoint(viewRect, activeField!.frame.origin)) {
-            
-            //Move the view
-            
-        }
     }
     
     func keyboardWillBeHidden(notification: NSNotification) {
         
-        //Once keyboard disappears, restore original positions of the view
-        let tabBarHeight = tabBarController!.tabBar.frame.size.height
-        
-        let navigationBarHeight = navigationController!.navigationBar.frame.size.height
-        
-        let contentInsets : UIEdgeInsets = UIEdgeInsetsMake(navigationBarHeight, 0.0, tabBarHeight, 0.0)
-        
-        //Move the view back down
-        
-        self.view.endEditing(true)
+        //TODO Move View
         
     }
     
@@ -200,8 +214,4 @@ class EditProfileVC: UIViewController, UITextFieldDelegate {
         return false
         
     }
-
-    
-    
-    
 }

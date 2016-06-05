@@ -9,8 +9,106 @@
 import Foundation
 import UIKit
 
+extension UIViewController {
+    
+    //Alerts
+    func alert(title: String, message: String = "") {
+    
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .Alert)
+        
+        let OKAction = UIAlertAction(title: "OK", style: .Default, handler: nil)
+        
+        alertController.addAction(OKAction)
+        
+        self.presentViewController(alertController, animated: true, completion: nil)
+    }
+}
+
+extension UITableViewController {
+    
+    //Scrolling the tableView
+    func animateViewMoving (up:Bool, moveValue :CGFloat){
+        
+        let movementDuration:NSTimeInterval = 0.3
+        
+        let movement:CGFloat = ( up ? -moveValue : moveValue)
+        
+        UIView.beginAnimations( "animateView", context: nil)
+        
+        UIView.setAnimationBeginsFromCurrentState(true)
+        
+        UIView.setAnimationDuration(movementDuration )
+        
+        self.view.frame = CGRectOffset(self.view.frame, 0,  movement)
+        
+        UIView.commitAnimations()
+        
+    }
+}
+
+
+extension UITextField{
+    
+    //XIB Placeholder Text Color
+    @IBInspectable var placeHolderColor: UIColor? {
+    
+        get {
+            
+            return self.placeHolderColor
+        
+        }
+        
+        set {
+        
+            self.attributedPlaceholder = NSAttributedString(string:self.placeholder != nil ? self.placeholder! : "", attributes:[NSForegroundColorAttributeName: newValue!])
+        
+        }
+    }
+    
+    //textField Border Color
+    func setTextFieldBorderColor(borderColor: UIColor) {
+        
+        let border = CALayer()
+        
+        let width = CGFloat(5.0)
+        
+        border.borderColor = borderColor.CGColor
+        
+        border.frame = CGRect(x: 0, y: 0, width:  self.frame.size.width, height: self.frame.size.height)
+        
+        border.borderWidth = width
+        
+        self.layer.addSublayer(border)
+        
+        self.layer.masksToBounds = true
+    }
+    
+}
+
+extension UIButton {
+    
+    //Button Border Color
+    func setButtonBorderColor(borderColor: UIColor) {
+        
+        let border = CALayer()
+        
+        let width = CGFloat(5.0)
+        
+        border.borderColor = borderColor.CGColor
+        
+        border.frame = CGRect(x: 0, y: 0, width:  self.frame.size.width, height: self.frame.size.height)
+        
+        border.borderWidth = width
+        
+        self.layer.addSublayer(border)
+        
+        self.layer.masksToBounds = true
+    }
+}
+
 extension UIImageView{
     
+    //Blur Images
     func blurImage(targetImageView:UIImageView?) {
         
         let blurEffect = UIBlurEffect(style: UIBlurEffectStyle.Light)
@@ -26,34 +124,13 @@ extension UIImageView{
     
 }
 
-//UI Extension
-//Placeholder text field
-extension UITextField{
-    
-    @IBInspectable var placeHolderColor: UIColor? {
-    
-        get {
-            
-            return self.placeHolderColor
-        
-        }
-        
-        set {
-        
-            self.attributedPlaceholder = NSAttributedString(string:self.placeholder != nil ? self.placeholder! : "", attributes:[NSForegroundColorAttributeName: newValue!])
-        
-        }
-    }
-}
-
-//extension working with the keyboard
+//Keyboard
 extension UIViewController {
     //Register the keyboard for notifications in  viewDidLoad
     func registerForKeyboardNotifications() {
         
         //Adding notifies on keyboard appearing
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CreateEventVC.keyboardWasShown(_:)), name: UIKeyboardWillShowNotification, object: nil)
-        
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CreateEventVC.keyboardWillBeHidden(_:)), name: UIKeyboardWillHideNotification, object: nil)
         
     }
@@ -63,7 +140,6 @@ extension UIViewController {
         
         //Removing notifies on keyboard appearing
         NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardWillShowNotification, object: nil)
-        
         NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardWillHideNotification, object: nil)
     }
     
@@ -78,14 +154,13 @@ extension UIViewController {
     func hideKeyboardWhenTappedAround() {
         
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(UIViewController.dismissKeyboard))
-        
         tap.cancelsTouchesInView = false
-        
         view.addGestureRecognizer(tap)
         
     }
 }
 
+//Remove duplicatees from arrays
 extension Array where Element: Equatable {
     
     mutating func removeObject(object: Element) {
@@ -106,9 +181,10 @@ extension Array where Element: Equatable {
     }
 }
 
-//Comparing dates
+
 extension NSDate {
     
+    //Comparing dates
     func isGreaterThanDate(dateToCompare: NSDate) -> Bool {
         //Declare Variables
         var isGreater = false
