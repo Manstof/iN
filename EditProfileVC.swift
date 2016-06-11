@@ -11,15 +11,16 @@ import Firebase
 
 class EditProfileVC: UIViewController, UITextFieldDelegate {
 
-    @IBOutlet weak var phoneNumberField: UITextField!
     @IBOutlet weak var usernameField: UITextField!
     @IBOutlet weak var emailField: UITextField!
     @IBOutlet weak var confirmEmailField: UITextField!
     @IBOutlet weak var passwordField: UITextField!
     @IBOutlet weak var confirmPasswordField: UITextField!
+    @IBOutlet weak var phoneNumberField: UITextField!
+    @IBOutlet weak var scrollView: UIScrollView!
     
-    //Utility
-    var activeField: UITextField?
+//    //Utility
+//    var activeField: UITextField?
     
     //Firebase
     let ref = FIRDatabase.database().reference()
@@ -27,21 +28,38 @@ class EditProfileVC: UIViewController, UITextFieldDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        //Set text field delegates
-        self.phoneNumberField.delegate = self
-        self.usernameField.delegate = self
-        self.emailField.delegate = self
-        self.confirmEmailField.delegate = self
-        self.passwordField.delegate = self
-        self.confirmPasswordField.delegate = self
-
+        //Set nextField
+        self.usernameField.nextField = self.emailField
+        self.emailField.nextField = self.confirmEmailField
+        self.confirmEmailField.nextField = self.passwordField
+        self.passwordField.nextField = self.confirmPasswordField
+        self.confirmPasswordField.nextField = self.phoneNumberField
+        
+        //Hide keyboard from Functions.swift
+        self.hideKeyboardWhenTappedAround()
+        
+        //Adding the done button to the number keyboard
+        self.addDoneButtonOnKeyboard(phoneNumberField)
+        
     }
     
     override func viewWillAppear(animated: Bool) {
         
+        registerForKeyboardDidShowNotification(scrollView)
+        registerForKeyboardWillHideNotification(scrollView)
+        
+    }
+    
+    override func viewWillDisappear(animated: Bool) {
+        
+        deregisterFromKeyboardNotifications()
+        
     }
     
     override func viewWillLayoutSubviews() {
+        
+        //Set navigation bar
+        self.navigationController?.navigationBarHidden = false
         
         //Set Background Image
         let backgroundImage = UIImageView(frame: UIScreen.mainScreen().bounds)
@@ -50,19 +68,12 @@ class EditProfileVC: UIViewController, UITextFieldDelegate {
         self.view.insertSubview(backgroundImage, atIndex: 0)
         
         //Borders
-        phoneNumberField.setTextFieldBorderColor(UIColor.whiteColor())
-        passwordField.setTextFieldBorderColor(UIColor.whiteColor())
-        confirmEmailField.setTextFieldBorderColor(UIColor.whiteColor())
-        confirmPasswordField.setTextFieldBorderColor(UIColor.whiteColor())
-        emailField.setTextFieldBorderColor(UIColor.whiteColor())
         usernameField.setTextFieldBorderColor(UIColor.whiteColor())
-        
-        
-//TODO Get Padding to work
-//        let paddingView = UIView(frame: CGRectMake(0, 0, 15, self.myTextField.frame.height))
-//        myTextField.leftView = paddingView
-//        myTextField.leftViewMode = UITextFieldViewMode.Always
-//        
+        emailField.setTextFieldBorderColor(UIColor.whiteColor())
+        confirmEmailField.setTextFieldBorderColor(UIColor.whiteColor())
+        passwordField.setTextFieldBorderColor(UIColor.whiteColor())
+        confirmPasswordField.setTextFieldBorderColor(UIColor.whiteColor())
+        phoneNumberField.setTextFieldBorderColor(UIColor.whiteColor())
         
     }
 
@@ -71,26 +82,7 @@ class EditProfileVC: UIViewController, UITextFieldDelegate {
         
     }
     
-    func textField(textField: UITextField, shouldChangeCharactersInRange range: NSRange, replacementString string: String) -> Bool {
-        
-        switch UITextField() {
-            
-        case phoneNumberField:
-            
-            print("switch Working")
-            
-            break
-            
-        default:
-            
-            print("Maybe")
-            
-            break
-            
-        }
-        
-        return false
-    }
+    //TODO get text field to edit for phone number
     
     @IBAction func signupButtonPressed(sender: AnyObject) {
         
@@ -171,7 +163,7 @@ class EditProfileVC: UIViewController, UITextFieldDelegate {
             
         } else {
         
-        return true
+            return true
         
         }
         
@@ -182,36 +174,27 @@ class EditProfileVC: UIViewController, UITextFieldDelegate {
     // -------------------------------------------------------------------------------
     // ╬═══ MARK ═ Keyboard ═══╬
     
-    func keyboardWasShown(notification: NSNotification) {
-        
-        //TODO Move View
-        
-    }
-    
-    func keyboardWillBeHidden(notification: NSNotification) {
-        
-        //TODO Move View
-        
-    }
-    
-    func textFieldDidBeginEditing(textField: UITextField) {
-        
-        activeField = textField //Passes to keyboardWasShown to identify textField
-        
-    }
-    
-    func textFieldDidEndEditing(textField: UITextField) {
-        
-        activeField = nil //Passes to keyboardWasShown to deselect textField
-        
-    }
-    
-    //Dismiss the keyboard on return button
+    //Dismiss the keyboard on return button or move to next field
     func textFieldShouldReturn(textField: UITextField) -> Bool {
         
-        self.view.endEditing(true)
-        
-        return false
-        
+        if textField.nextField == nil {
+            
+            self.view.endEditing(true)
+            
+            if textField == phoneNumberField {
+                
+                signupButtonPressed(self)
+                
+            }
+            
+            return false
+            
+        } else {
+            
+            textField.nextField?.becomeFirstResponder()
+            
+            return true
+            
+        }
     }
 }

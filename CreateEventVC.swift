@@ -11,8 +11,6 @@ import Contacts
 import ContactsUI
 import Firebase
 
-
-
 class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextFieldDelegate, UITextViewDelegate, UIPickerViewDelegate, CNContactPickerDelegate {
     
     //UI Elements
@@ -464,38 +462,6 @@ class CreateEventVC: UITableViewController, UIImagePickerControllerDelegate, UIN
         
         eventNameField.resignFirstResponder()
         
-    }
-    
-    //Adding a toolbar to the number keyboard
-    //a slightly more generalized solution based on above
-    //TODO: Move to a different file
-    func addDoneButtonOnKeyboard(view: UIView?) {
-        
-        let doneToolbar: UIToolbar = UIToolbar(frame: CGRectMake(0, 0, tableView.bounds.size.width, 50))
-        
-        doneToolbar.barStyle = UIBarStyle.Default
-        
-        let flexSpace = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.FlexibleSpace, target: nil, action: nil)
-        
-        let done: UIBarButtonItem = UIBarButtonItem(title: "Done", style: UIBarButtonItemStyle.Done, target: view, action: #selector(UIResponder.resignFirstResponder))
-        
-        var items = [UIBarButtonItem]()
-        
-        items.append(flexSpace)
-        
-        items.append(done)
-       
-        doneToolbar.items = items
-        
-        doneToolbar.sizeToFit()
-        
-        if let accessorizedView = view as? UITextField {
-        
-            accessorizedView.inputAccessoryView = doneToolbar
-            
-            accessorizedView.inputAccessoryView = doneToolbar
-        
-        }
     }
     
     // █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █ ▄ █ ▄ █ ▄ █ ▄ ▄ █

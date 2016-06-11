@@ -10,8 +10,40 @@ import Foundation
 import UIKit
 import Firebase
 
+func FBaseEmailTakenVerification() {
+   
+    print("run")
+    
+    let ref: FIRDatabaseReference!
+    
+    ref = FIRDatabase.database().reference()
+    //Firebase
+    FIRAuth.auth()?.addAuthStateDidChangeListener { auth, user in
+        
+        print(user)
+        
+        if let user = user {
+            
+            print(ref)
+            
+            ref.observeSingleEventOfType(.Value, withBlock: { snapshot in
+                //Nothing inside of this closuer will run?
+                if snapshot.exists() {
+                    
+                    print("snapshot exists")
+                    
+                } else {
+                        
+                   print("Snapshot does not exist")
+                   
+                }
+            })
+        }
+    }
+}
+
 extension String {
-    //Validate Email
+    //Validate Email input
     var isValidEmail: Bool {
         
         let emailRegEx = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,4}"
@@ -23,7 +55,16 @@ extension String {
         return result
     }
     
-    //Validate Password
+    //Validate Email not in use
+    var isEmailTaken: Bool {
+        
+        FBaseEmailTakenVerification()
+        
+        return true
+        
+    }
+    
+    //Validate Password input
     var isValidPassword: Bool {
         
         if self.characters.count < 8 {
@@ -37,7 +78,7 @@ extension String {
         }
     }
     
-    //Validate Phone Number
+    //Validate Phone Number input
     var isValidPhoneNumber: Bool {
         
         let phoneRegEx = "^\\d{3}-\\d{3}-\\d{4}$"
@@ -49,7 +90,7 @@ extension String {
         return result
     }
 
-    //Validate Username
+    //Validate Username input
     var isValidUsername: Bool {
         
         let usernameRegEx = "^[a-zA-Z0-9_]+$"
@@ -64,56 +105,107 @@ extension String {
         
     }
     
+    //Search to see if username in use
     var isUsernameTaken: Bool {
         
-        //TODO search and verify username isnt taken
+        let ref = FIRDatabase.database().reference()
         
+        ref.child("users").observeSingleEventOfType(.Value, withBlock: { snapshot in
+            
+            if snapshot.exists() {
+                
+                print(snapshot)
+                
+            }
+        })
+    
         return false
     }
-    
 }
 
-class validateUserInput: UIViewController {
-//Verification Functions
-    func validateUserProfileInput(username: String, phoneNumber: String, emailAddress: String, confirmEmailAddress: String, password: String, confirmPassword: String) -> Bool {
+func validateUserProfileInput(username: String, phoneNumber: String, emailAddress: String, confirmEmailAddress: String, password: String, confirmPassword: String) -> String {
+    
+    if username.isValidUsername != true {
         
-        let alertTitle = "Failed Signup"
+        return "Username can only contain alphanumeric characters, '-' '.' and '_'"
         
-        if username.isValidUsername != true {
-            
-            alert(alertTitle, message: "Username can only contain alphanumeric characters, '-' '.' and '_'")
-            
-        } else if username.isUsernameTaken == true {
-            
-            alert(alertTitle, message: "Username is taken, please try another one")
-            
-        } else if phoneNumber.isValidPhoneNumber != true {
-            
-            //TODO Format the phone number input field
-            alert(alertTitle, message: "Please enter a valid phone number")
-            
-        } else if emailAddress.isValidEmail != true {
-            
-            alert(alertTitle, message: "Please enter a valid email address")
-            
-        } else if emailAddress != confirmEmailAddress {
-            
-            alert(alertTitle, message: "Email addresses fields do not match" )
-            
-        } else if password.isValidPassword != true {
-            
-            alert(alertTitle, message: "Please enter a valid password.  Passwords must be alphanumeric and at least 7 characters in legnth")
-            
-        } else if password != confirmPassword {
-            
-            alert(alertTitle, message: "Password fields do not match")
-            
-        } else {
-            
-            return true
-            
-        }
+    } else if username.isUsernameTaken == true {
         
-        return false
+        return "Username is taken, please try another one"
+        
+    } else if phoneNumber.isValidPhoneNumber != true {
+        
+        //TODO Format the phone number input field
+        return "Please enter a valid phone number"
+        
+    } else if emailAddress.isValidEmail != true {
+        
+        return "Please enter a valid email address"
+        
+    } else if emailAddress != confirmEmailAddress {
+        
+        return "Email address fields do not match"
+        
+    } else if password.isValidPassword != true {
+        
+       return "Please enter a valid password.  Passwords must be alphanumeric and at least 7 characters in length"
+        
+    } else if password != confirmPassword {
+        
+        return "Password fields do not match"
+        
+    } else {
+        
+        return "Sign up successful"
+        
     }
+    
+    return "Sign up failed"
+
 }
+
+
+//class validateUserInput: UIViewController {
+////Verification Functions
+//    func validateUserProfileInput(username: String, phoneNumber: String, emailAddress: String, confirmEmailAddress: String, password: String, confirmPassword: String) -> Bool {
+//        
+//        let alertTitle = "Failed Signup"
+//        
+//        if username.isValidUsername != true {
+//            
+//            alert(alertTitle, message: "Username can only contain alphanumeric characters, '-' '.' and '_'")
+//            
+//        } else if username.isUsernameTaken == true {
+//            
+//            alert(alertTitle, message: "Username is taken, please try another one")
+//            
+//        } else if phoneNumber.isValidPhoneNumber != true {
+//            
+//            //TODO Format the phone number input field
+//            alert(alertTitle, message: "Please enter a valid phone number")
+//            
+//        } else if emailAddress.isValidEmail != true {
+//            
+//            alert(alertTitle, message: "Please enter a valid email address")
+//            
+//        } else if emailAddress != confirmEmailAddress {
+//            
+//            alert(alertTitle, message: "Email address fields do not match" )
+//            
+//        } else if password.isValidPassword != true {
+//            
+//            alert(alertTitle, message: "Please enter a valid password.  Passwords must be alphanumeric and at least 7 characters in length")
+//            
+//        } else if password != confirmPassword {
+//            
+//            alert(alertTitle, message: "Password fields do not match")
+//            
+//        } else {
+//            
+//            return true
+//            
+//        }
+//        
+//        return false
+//    }
+//}

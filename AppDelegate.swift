@@ -42,8 +42,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         }
         
-        
-        
         //Ask user if we can use their location
         locationManager = CLLocationManager()
         locationManager?.requestWhenInUseAuthorization()

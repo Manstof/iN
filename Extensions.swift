@@ -47,116 +47,14 @@ extension UITableViewController {
 }
 
 
-extension UITextField{
+extension UIScrollView {
+    //ScrollView extension used to with the UIViewController extensions to scroll with the keyboard
+    func setContentInsetAndScrollIndicatorInsets(edgeInsets: UIEdgeInsets) {
     
-    //XIB Placeholder Text Color
-    @IBInspectable var placeHolderColor: UIColor? {
+        self.contentInset = edgeInsets
+        
+        self.scrollIndicatorInsets = edgeInsets
     
-        get {
-            
-            return self.placeHolderColor
-        
-        }
-        
-        set {
-        
-            self.attributedPlaceholder = NSAttributedString(string:self.placeholder != nil ? self.placeholder! : "", attributes:[NSForegroundColorAttributeName: newValue!])
-        
-        }
-    }
-    
-    //textField Border Color
-    func setTextFieldBorderColor(borderColor: UIColor) {
-        
-        let border = CALayer()
-        
-        let width = CGFloat(5.0)
-        
-        border.borderColor = borderColor.CGColor
-        
-        border.frame = CGRect(x: 0, y: 0, width:  self.frame.size.width, height: self.frame.size.height)
-        
-        border.borderWidth = width
-        
-        self.layer.addSublayer(border)
-        
-        self.layer.masksToBounds = true
-    }
-    
-}
-
-extension UIButton {
-    
-    //Button Border Color
-    func setButtonBorderColor(borderColor: UIColor) {
-        
-        let border = CALayer()
-        
-        let width = CGFloat(5.0)
-        
-        border.borderColor = borderColor.CGColor
-        
-        border.frame = CGRect(x: 0, y: 0, width:  self.frame.size.width, height: self.frame.size.height)
-        
-        border.borderWidth = width
-        
-        self.layer.addSublayer(border)
-        
-        self.layer.masksToBounds = true
-    }
-}
-
-extension UIImageView{
-    
-    //Blur Images
-    func blurImage(targetImageView:UIImageView?) {
-        
-        let blurEffect = UIBlurEffect(style: UIBlurEffectStyle.Light)
-        
-        let blurEffectView = UIVisualEffectView(effect: blurEffect)
-        
-        blurEffectView.frame = targetImageView!.bounds
-        
-        blurEffectView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight] // for supporting device rotation
-        
-        targetImageView?.addSubview(blurEffectView)
-    }
-    
-}
-
-//Keyboard
-extension UIViewController {
-    //Register the keyboard for notifications in  viewDidLoad
-    func registerForKeyboardNotifications() {
-        
-        //Adding notifies on keyboard appearing
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CreateEventVC.keyboardWasShown(_:)), name: UIKeyboardWillShowNotification, object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CreateEventVC.keyboardWillBeHidden(_:)), name: UIKeyboardWillHideNotification, object: nil)
-        
-    }
-    
-    //Deregister the keyboard for notification in viewWillDisapper
-    func deregisterFromKeyboardNotifications() {
-        
-        //Removing notifies on keyboard appearing
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardWillShowNotification, object: nil)
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardWillHideNotification, object: nil)
-    }
-    
-    //Dismissing the keyboard for hideKeyboardWhenTappedAround
-    func dismissKeyboard() {
-        
-        view.endEditing(true)
-        
-    }
-    
-    //Hide the keyboard when the user taps off the keyboard
-    func hideKeyboardWhenTappedAround() {
-        
-        let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(UIViewController.dismissKeyboard))
-        tap.cancelsTouchesInView = false
-        view.addGestureRecognizer(tap)
-        
     }
 }
 
@@ -180,7 +78,6 @@ extension Array where Element: Equatable {
         }
     }
 }
-
 
 extension NSDate {
     

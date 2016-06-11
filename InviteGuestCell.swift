@@ -10,6 +10,9 @@ import UIKit
 
 class InviteGuestCell: UITableViewCell {
     
+    @IBOutlet weak var contactNameLabel: UILabel!
+    
+    @IBOutlet weak var contactNumberLabel: UILabel!
     
     @IBOutlet weak var contactImageButton: UIButton! {
         didSet {
@@ -30,14 +33,12 @@ class InviteGuestCell: UITableViewCell {
         
         }
     }
-    
-    @IBOutlet weak var contactNameLabel: UILabel!
-    
-    @IBOutlet weak var contactNumberLabel: UILabel!
 
     override func prepareForReuse() {
+    
         contactImageButton.setTitle("", forState: .Normal)
         contactImageButton.setImage(nil, forState: .Normal)
+    
     }
     
     func setNewImage(image: UIImage) {
@@ -52,15 +53,20 @@ class InviteGuestCell: UITableViewCell {
     }
     
     func setInitials(firstName: String, secondName: String) {
+        
         var firstInitial = ""
         var lastInitial = ""
         
         if firstName.isEmpty == false {
+            
             firstInitial = firstName.substringToIndex(firstName.startIndex.advancedBy(1))
+        
         }
         
         if secondName.isEmpty == false {
+        
             lastInitial = secondName.substringToIndex(secondName.startIndex.advancedBy(1))
+        
         }
         
         let guestInitials = firstInitial + lastInitial
@@ -71,13 +77,12 @@ class InviteGuestCell: UITableViewCell {
     
     override func awakeFromNib() {
         super.awakeFromNib()
-        // Initialization code
+        
     }
 
     override func setSelected(selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
-
-        // Configure the view for the selected state
+    
     }
 
 }

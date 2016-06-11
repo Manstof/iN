@@ -141,7 +141,20 @@ class SettingsVC: UITableViewController {
     
     override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         
-        if indexPath.section == 3 {
+        if indexPath.section == 2 || indexPath.section == 3 {
+            
+            let firebaseAuth = FIRAuth.auth()
+            
+            do {
+            
+                try firebaseAuth?.signOut()
+            
+            } catch let signOutError as NSError {
+            
+                print ("Error signing out: %@", signOutError)
+
+            }
+
             
             print("Logout")
             

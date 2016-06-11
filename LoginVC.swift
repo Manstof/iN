@@ -6,6 +6,8 @@
 //  Copyright © 2016 Mark Manstof. All rights reserved.
 //
 
+//TODO Make XIB Pretty
+
 import UIKit
 import Firebase
 
@@ -16,46 +18,39 @@ class LoginVC: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var passwordField: UITextField!
     @IBOutlet weak var signupButton: UIButton!
     @IBOutlet weak var loginButton: UIButton!
+    @IBOutlet weak var scrollView: UIScrollView!
     
-    //Utility
-    var activeField: UITextField?
-
+    //firebase Auth
+    var authHandle: FIRAuthStateDidChangeListenerHandle?
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
-//        FIRAuth.auth()?.addAuthStateDidChangeListener { auth, user in
-//            if let user = user {
-//
-//                print("\(user) is logged in")
-//
-//                self.performSegueWithIdentifier("loginToTabs", sender: self)
-//
-//            } else {
-//                
-//            }
-//        }
         
-        //Register Keyboard
-//        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(LoginVC.keyboardWasShown(_:)), name: UIKeyboardWillShowNotification, object: nil)
-//        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(LoginVC.keyboardWillBeHidden(_:)), name: UIKeyboardWillHideNotification, object: nil)
+        //Auth firebase user
+        firebaseLoginIfUserPersists(self)
 
-        //Set Delegates
-        self.emailAddressField.delegate = self
-        self.passwordField.delegate = self
+        //Set Next Text Fields on keyboard return
+        self.emailAddressField.nextField = self.passwordField
         
-        //Hide keyboard from Functions.swift
+        //Hide keyboard
         self.hideKeyboardWhenTappedAround()
+        
+    }
+    
+    override func viewWillAppear(animated: Bool) {
+        
+        registerForKeyboardDidShowNotification(scrollView)
+        registerForKeyboardWillHideNotification(scrollView)
         
     }
     
     override func viewDidLayoutSubviews() {
         
+        //Hide nav bar
+        self.navigationController?.navigationBarHidden = true
+        
         //Set Background Image
-        let backgroundImage = UIImageView(frame: UIScreen.mainScreen().bounds)
-        backgroundImage.image = UIImage(named: "splashPage")
-        backgroundImage.blurImage(backgroundImage)
-        self.view.insertSubview(backgroundImage, atIndex: 0)
+        setBackgroundImage()
         
         //Set Border Colors
         passwordField.setTextFieldBorderColor(UIColor.whiteColor())
@@ -63,12 +58,12 @@ class LoginVC: UIViewController, UITextFieldDelegate {
         
     }
     
-    override func viewWillAppear(animated: Bool) {
-        
-    }
-    
     override func viewWillDisappear(animated: Bool) {
         
+        //Firebase remove user auth listener
+        FIRAuth.auth()?.removeAuthStateDidChangeListener(authHandle!)
+        
+        //Keyboard
         deregisterFromKeyboardNotifications()
         
     }
@@ -85,7 +80,15 @@ class LoginVC: UIViewController, UITextFieldDelegate {
         if emailAddressField.text?.isValidEmail == false {
             
             alert("Failed Log iN", message: "Please provide a valid email address")
-
+            
+        } else if emailAddressField.text?.isEmailTaken == true {
+            
+            alert("Failed Log iN", message: "Email Address is already in use")
+            
+        } else if passwordField.text == "" {
+            
+            alert("Failed Log iN", message:  "Please enter a password")
+        
         } else if passwordField.text?.isValidPassword == false {
             
             alert("Failed Log iN", message:  "Password Incorrect")
@@ -142,45 +145,28 @@ class LoginVC: UIViewController, UITextFieldDelegate {
     // -------------------------------------------------------------------------------
     // ╬═══ MARK ═ Keyboard ═══╬
     
-    func keyboardWasShown(notification: NSNotification) {
-        
-        if let keyboardSize = (notification.userInfo?[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue() {
-         
-            self.view.frame.origin.y -= keyboardSize.height
-        
-        }
-
-    }
-    
-    func keyboardWillBeHidden(notification: NSNotification) {
-        
-        if let keyboardSize = (notification.userInfo?[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue() {
-         
-            self.view.frame.origin.y += keyboardSize.height
-        
-        }
-        
-    }
-    
-    func textFieldDidBeginEditing(textField: UITextField) {
-        
-        activeField = textField //Passes to keyboardWasShown to identify textField
-        
-    }
-    
-    func textFieldDidEndEditing(textField: UITextField) {
-        
-        activeField = nil //Passes to keyboardWasShown to deselect textField
-        
-    }
-    
     //Dismiss the keyboard on return button
     func textFieldShouldReturn(textField: UITextField) -> Bool {
         
-        self.view.endEditing(true)
+        if textField.nextField == nil {
         
-        return false
+            self.view.endEditing(true)
+            
+            if textField == passwordField {
+                
+                loginButtonPressed(self)
+                
+            }
+            
+            return false
+            
+        } else {
         
+            textField.nextField?.becomeFirstResponder()
+            
+            return true
+            
+        }
     }
 }
 

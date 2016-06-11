@@ -47,8 +47,6 @@ class spinner: NSObject {
 func phoneInputFormatter(phoneNumberString: String) -> String {
     
     //Move from edit profile into this function
-    
-    
     return "String"
 }
 
