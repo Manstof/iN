@@ -30,8 +30,6 @@ func firebaseLogout() {
 func firebaseLogin(email: String, password: String) {
     
     
-    
-    
 }
 
 func firebaseLoginIfUserPersists(viewController : UIViewController) {

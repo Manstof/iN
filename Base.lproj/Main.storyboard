@@ -861,7 +861,7 @@
                     </view>
                     <navigationItem key="navigationItem" title="Login" id="467-ma-DLQ"/>
                     <connections>
-                        <outlet property="emailAddressField" destination="Xsk-1k-YHJ" id="9mZ-8X-GeK"/>
+                        <outlet property="emailField" destination="Xsk-1k-YHJ" id="4OC-Nk-Owz"/>
                         <outlet property="loginButton" destination="20g-CB-o54" id="W8V-Sr-enx"/>
                         <outlet property="passwordField" destination="kbr-4H-E8x" id="32h-ZI-Qw3"/>
                         <outlet property="scrollView" destination="dPI-vy-Fq7" id="sWc-v9-NRw"/>

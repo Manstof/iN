@@ -11,7 +11,7 @@ import UIKit
 
 func presentTabsView (viewController: UIViewController) {
     
-    let mainStoryboard = UIStoryboard(name: "Storyboard", bundle: NSBundle.mainBundle())
+    let mainStoryboard = UIStoryboard(name: "Main", bundle: NSBundle.mainBundle())
     
     let presentedViewController : UIViewController = mainStoryboard.instantiateViewControllerWithIdentifier("TabsView") as UIViewController
     

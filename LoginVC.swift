@@ -14,7 +14,7 @@ import Firebase
 class LoginVC: UIViewController, UITextFieldDelegate {
 
     //UI Elements
-    @IBOutlet weak var emailAddressField: UITextField!
+    @IBOutlet weak var emailField: UITextField!
     @IBOutlet weak var passwordField: UITextField!
     @IBOutlet weak var signupButton: UIButton!
     @IBOutlet weak var loginButton: UIButton!
@@ -25,12 +25,9 @@ class LoginVC: UIViewController, UITextFieldDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        //Auth firebase user
-        firebaseLoginIfUserPersists(self)
 
         //Set Next Text Fields on keyboard return
-        self.emailAddressField.nextField = self.passwordField
+        self.emailField.nextField = self.passwordField
         
         //Hide keyboard
         self.hideKeyboardWhenTappedAround()
@@ -39,8 +36,16 @@ class LoginVC: UIViewController, UITextFieldDelegate {
     
     override func viewWillAppear(animated: Bool) {
         
+        //Keyboard functions
         registerForKeyboardDidShowNotification(scrollView)
         registerForKeyboardWillHideNotification(scrollView)
+        
+    }
+    
+    override func viewDidAppear(animated: Bool) {
+        
+        //Auth firebase user
+        //firebaseLoginIfUserPersists(self)
         
     }
     
@@ -54,14 +59,14 @@ class LoginVC: UIViewController, UITextFieldDelegate {
         
         //Set Border Colors
         passwordField.setTextFieldBorderColor(UIColor.whiteColor())
-        emailAddressField.setTextFieldBorderColor(UIColor.whiteColor())
+        emailField.setTextFieldBorderColor(UIColor.whiteColor())
         
     }
     
     override func viewWillDisappear(animated: Bool) {
         
         //Firebase remove user auth listener
-        FIRAuth.auth()?.removeAuthStateDidChangeListener(authHandle!)
+        //FIRAuth.auth()?.removeAuthStateDidChangeListener(authHandle!)
         
         //Keyboard
         deregisterFromKeyboardNotifications()
@@ -70,6 +75,8 @@ class LoginVC: UIViewController, UITextFieldDelegate {
     
     @IBAction func signupButtonPressed(sender: AnyObject) {
         
+        //TODO Send content from text fields with segue
+        
         performSegueWithIdentifier("loginToEditProfile", sender: self)
         
     }
@@ -77,13 +84,10 @@ class LoginVC: UIViewController, UITextFieldDelegate {
     @IBAction func loginButtonPressed(sender: AnyObject) {
         
         //TODO make the username lookup the email so they could sign in with username too
-        if emailAddressField.text?.isValidEmail == false {
+        
+        if emailField.text?.isValidEmail == false {
             
             alert("Failed Log iN", message: "Please provide a valid email address")
-            
-        } else if emailAddressField.text?.isEmailTaken == true {
-            
-            alert("Failed Log iN", message: "Email Address is already in use")
             
         } else if passwordField.text == "" {
             
@@ -95,24 +99,19 @@ class LoginVC: UIViewController, UITextFieldDelegate {
             
         } else {
             
-            FIRAuth.auth()?.signInWithEmail(emailAddressField.text!, password: passwordField.text!) { (user, error) in
+            //TODO Move this to FBase.swift
+            FIRAuth.auth()?.signInWithEmail(emailField.text!, password: passwordField.text!) { (user, error) in
                 
                 if error != nil {
                     
                     let errorCode = error!.code
                     
-                    //TODO Check other cases
+                    //TODO Check all other cases
                     switch errorCode {
                         
                     case 17011:
                         
                         self.alert("Failed Log iN", message: "User account doesn't exist, please create one")
-                        
-                        break
-                        
-                    case 17999:
-                        
-                        print("17999")
                         
                         break
                         
@@ -169,5 +168,3 @@ class LoginVC: UIViewController, UITextFieldDelegate {
         }
     }
 }
-
-//TODO Add prepare for segue to pass username and pass if typed to the signup viewController

@@ -11,13 +11,13 @@ import UIKit
 import Firebase
 
 func FBaseEmailTakenVerification() {
-   
-    print("run")
+    
+    print("run FBaseEmailTakenVerification in Validation.swift")
     
     let ref: FIRDatabaseReference!
     
     ref = FIRDatabase.database().reference()
-    //Firebase
+
     FIRAuth.auth()?.addAuthStateDidChangeListener { auth, user in
         
         print(user)
@@ -159,9 +159,6 @@ func validateUserProfileInput(username: String, phoneNumber: String, emailAddres
         return "Sign up successful"
         
     }
-    
-    return "Sign up failed"
-
 }
 
 

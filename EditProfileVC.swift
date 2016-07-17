@@ -62,10 +62,7 @@ class EditProfileVC: UIViewController, UITextFieldDelegate {
         self.navigationController?.navigationBarHidden = false
         
         //Set Background Image
-        let backgroundImage = UIImageView(frame: UIScreen.mainScreen().bounds)
-        backgroundImage.image = UIImage(named: "splashPage")
-        backgroundImage.blurImage(backgroundImage)
-        self.view.insertSubview(backgroundImage, atIndex: 0)
+        setBackgroundImage()
         
         //Borders
         usernameField.setTextFieldBorderColor(UIColor.whiteColor())
@@ -147,11 +144,16 @@ class EditProfileVC: UIViewController, UITextFieldDelegate {
             
         } else if emailField.text?.isValidEmail != true {
         
+            //TODO Make this a firebase alert and not my own
             alert(alertTitle, message: "Please enter a valid email address")
             
         } else if emailField.text != confirmEmailField.text {
         
             alert(alertTitle, message: "Email addresses fields do not match" )
+            
+        } else if emailField.text?.isEmailTaken == true {
+                
+                alert("Failed Log iN", message: "Email Address is already in use")
             
         } else if passwordField.text?.isValidPassword != true {
             
